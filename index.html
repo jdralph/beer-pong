@@ -745,7 +745,8 @@ const flag=c=>(c&&CMAP[c])?String.fromCodePoint.apply(null,c.split("").map(x=>12
 const rosterP=id=>id?S.roster.find(p=>p.id===id):null;
 const ini=n=>((n||"?").trim().split(/\s+/).slice(0,2).map(w=>w[0]||"").join("").toUpperCase())||"?";
 function pdisp(p){const f=flag(p.nat); return (f?f+" ":"")+p.name;}
-function pn(tm,k){const p=rosterP(tm[k+"id"]); return p?pdisp(p):(tm[k]||"").trim();}
+function pn(tm,k){const p=rosterP(tm[k+"id"]); return p?p.name:(tm[k]||"").trim();}
+function pnf(tm,k){const p=rosterP(tm[k+"id"]); return p?pdisp(p):(tm[k]||"").trim();}
 const SAMPLES=[["Mia","AU"],["Josh","NZ"],["Liam","IE"],["Ava","GB"],["Noah","US"],["Zoe","CA"],["Ella","DE"],["Sam","BR"],["Ruby","JP"],["Kai","FR"]];
 function addSamples(){
   SAMPLES.forEach(x=>{if(!S.roster.some(p=>p.name.toLowerCase()===x[0].toLowerCase())) S.roster.push({id:uid(),name:x[0],nat:x[1],created:Date.now()});});
@@ -1085,7 +1086,7 @@ function renderDraw(){
   } else if(D.phase==="done"){
     const T=drawTeams();
     body=`<h1 class="dw-h">Teams are set</h1>
-      <div class="dw-teams">${T.teams.map((tm,i)=>`<div class="dw-team"><span class="tn">Team ${i+1}</span><span class="dw-s f">${esc(pn(tm,"p1"))}</span><span class="dw-s f">${esc(pn(tm,"p2"))}</span></div>`).join("")}</div>
+      <div class="dw-teams">${T.teams.map((tm,i)=>`<div class="dw-team"><span class="tn">Team ${i+1}</span><span class="dw-s f">${esc(pnf(tm,"p1"))}</span><span class="dw-s f">${esc(pnf(tm,"p2"))}</span></div>`).join("")}</div>
       ${T.sub?`<p class="dw-sub">Sitting out as sub: <b>${esc(nm(T.sub))}</b></p>`:""}
       <button class="btn primary big" data-act="duse">Use these teams</button>
       <div class="row-btns"><button class="btn" data-act="dagain">Draw again</button><button class="btn" data-act="dclose">Close</button></div>`;

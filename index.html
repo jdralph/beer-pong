@@ -189,11 +189,11 @@ td.pos{font-family:var(--display);font-weight:700;font-size:18px;width:44px}
 /* Sheet */
 .sheet-wrap{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .scrim{position:absolute;inset:0;background:rgba(5,12,24,.5);border:0;padding:0}
-.sheet{position:relative;width:100%;max-width:560px;max-height:92%;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:up .18s ease-out}
+.sheet{position:relative;width:100%;max-width:560px;max-height:92%;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;animation:up .18s ease-out}
 @keyframes up{from{transform:translateY(24px)}to{transform:none}}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}.track,.track::after{transition:none}}
 .sheet .eyebrow{margin:0;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.sheet h2{font-size:26px;text-transform:uppercase}
+.sheet h2{font-size:24px;text-transform:uppercase}
 .sheet h3{font-size:17px;text-transform:uppercase;color:var(--muted)}
 .sheet h3 small{font-family:var(--body);text-transform:none;font-weight:500;font-size:13px}
 .pick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -204,7 +204,7 @@ td.pos{font-family:var(--display);font-weight:700;font-size:18px;width:44px}
 .pickbtn.on small{color:inherit;opacity:.85}
 .pickbtn .wl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;min-height:16px}
 .srow{display:grid;grid-template-columns:minmax(0,1fr) 44px 64px 44px;gap:8px;align-items:center}
-.srow + .srow{margin-top:8px}
+.srow + .srow{margin-top:6px}
 .srow .snm{overflow-wrap:anywhere;font-weight:600}
 .step{height:44px;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;font-size:22px;font-weight:600;padding:0}
 .srow input{text-align:center;font-family:var(--display);font-size:24px;font-weight:600;padding:6px 4px;height:44px}
@@ -236,11 +236,11 @@ select:focus-visible{outline:2px solid var(--court);outline-offset:2px}
 :root{--on-win:#fff;--low:#d9301f;--low-ink:#fff}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--on-win:#052113}}
 :root[data-theme="dark"]{--on-win:#052113}
-.tmr{border:0;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--ball);color:var(--ball-ink)}
+.tmr{border:0;border-radius:12px;padding:9px 12px;display:flex;flex-direction:column;gap:7px;background:var(--ball);color:var(--ball-ink)}
 .tmr.low{background:var(--low);color:var(--low-ink)}
 .tmr-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .tmr-lab{font-weight:700;opacity:.8}
-.tmr-t{font-family:var(--display);font-size:56px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.tmr-t{font-family:var(--display);font-size:42px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
 .tmr-ctl{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .tmr .btn{background:var(--surface);color:var(--ink)}
 .tmr .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -269,9 +269,9 @@ select:focus-visible{outline:2px solid var(--court);outline-offset:2px}
 .opt:disabled{opacity:.5;cursor:not-allowed}
 
 /* Result sheet: bigger, centred names and a small draw button */
-.pickbtn{align-items:center;text-align:center;min-height:112px;padding:14px 8px}
+.pickbtn{align-items:center;text-align:center;min-height:92px;padding:10px 8px}
 .pickbtn b{display:block;width:100%}
-.pickbtn b.pl1,.pickbtn b.pn{font-size:26px;line-height:1.12}
+.pickbtn b.pl1,.pickbtn b.pn{font-size:24px;line-height:1.12}
 .drawrow{display:flex;justify-content:center}
 .drawbtn{border:2px solid var(--line);background:var(--surface-2);border-radius:999px;padding:7px 26px;font-family:var(--display);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.05em}
 .drawbtn.on{border-color:var(--court);background:var(--court);color:var(--court-ink)}
@@ -504,8 +504,8 @@ function roundName(t,m){
 }
 function describe(E,r){
   const p=r.split(":");
-  if(p[0]==="w") return "Winner of game "+E.gno[p[1]];
-  if(p[0]==="l") return "Loser of game "+E.gno[p[1]];
+  if(p[0]==="w") return "Winner of Game "+E.gno[p[1]];
+  if(p[0]==="l") return "Loser of Game "+E.gno[p[1]];
   if(p[0]==="r") return ord(+p[1])+" on the ladder";
   return "To be decided";
 }
@@ -596,8 +596,8 @@ function render(){
 function empty(title,body,btn,act){return `<div class="empty"><h2>${title}</h2><p>${body}</p>${btn?`<button class="btn primary" data-act="${act}">${btn}</button>`:""}</div>`;}
 function champHTML(t,E){
   const p=E.placings(), c=p.find(x=>x.pl===1); if(!c) return "";
-  const sub=players(teamById(t,c.id)||{});
-  return `<div class="champ"><span class="eb">Champions</span><strong>${esc(tName(t,c.id))}</strong>${(teamById(t,c.id)||{}).name?`<span>${esc(sub)}</span>`:""}</div>`;
+  const sub=players(teamById(t,c.id)||{}), tm0=teamById(t,c.id)||{}, np=[pn(tm0,"p1"),pn(tm0,"p2")].filter(Boolean).length;
+  return `<div class="champ"><span class="eb">${np===1?"Champion":"Champions"}</span><strong>${esc(tName(t,c.id))}</strong>${(teamById(t,c.id)||{}).name?`<span>${esc(sub)}</span>`:""}</div>`;
 }
 function teamRow(t,E,m,side,id,o){
   const ref=side===0?m.a:m.b;
@@ -609,19 +609,15 @@ function teamRow(t,E,m,side,id,o){
 }
 function footText(t,E,m,st){
   if(st==="skip") return "Not needed. The unbeaten team won the Grand Final.";
-  if(m.cond) return "Played only if the losers-bracket team wins game "+E.gno[m.cond]+". Winner takes the title.";
-  if(m.bk==="R") return "";
+  if(m.cond) return "Played only if the losers-bracket team wins Game "+E.gno[m.cond]+".";
+  if(m.bk==="R"||m.bk==="P") return "";
+  if(m.bk==="G") return t.opts.reset?"Unbeaten team wins it outright. If not, Game "+E.gno["G2"]+" decides it.":"";
   const parts=[], wd=E.dest(m.id,"w"), ld=E.dest(m.id,"l");
-  if(m.bk==="G"&&!m.cond) parts.push(t.opts.reset?"Unbeaten team wins it outright. If not, game "+E.gno["G2"]+" decides it":"Winner takes the title");
-  else if(m.bk==="P") parts.push("Winner 3rd · Loser 4th");
-  else if(wd) parts.push("Winner → game "+E.gno[wd]);
-  else parts.push("Winner takes the title");
-  if(m.bk!=="G"&&m.bk!=="P"){
-    if(ld) parts.push("Loser → game "+E.gno[ld]+(m.bk==="W"||m.sc?" (second chance)":""));
-    else if(m.lp){const tie=t.matches.filter(x=>x.lp===m.lp&&x.bk===m.bk&&E.status(x.id)!=="bye").length>1; parts.push("Loser out · "+(tie?"=":"")+ord(m.lp));}
-  }
+  if(wd) parts.push("Winner → Game "+E.gno[wd]);
+  if(ld) parts.push("Loser → Game "+E.gno[ld]+(m.bk==="W"||m.sc?" (second chance)":""));
   return parts.join(" · ");
 }
+function rnS(t,m){return t.teams.length===2?"":" · "+roundName(t,m);}   // a head to head has no rounds worth naming
 function card(t,E,m,showRound){
   const st=E.status(m.id), s=E.sides(m.id), o=E.outcome(m.id);
   let chip={done:"Played",ready:"Ready",wait:"Waiting",maybe:"If needed",skip:"Not needed"}[st];
@@ -632,7 +628,7 @@ function card(t,E,m,showRound){
   const tag=can?"button":"div";
   const foot=[footText(t,E,m,st),serFoot(t,E,m,st)].filter(Boolean).join(" · ");
   return `<${tag} class="match s-${gs||st}" ${can?`data-act="open:${m.id}" aria-label="Game ${E.gno[m.id]}: ${st==="done"?"edit result":"enter result"}"`:""}>
-    <div class="mhead"><span class="gno">Game ${E.gno[m.id]}${showRound?" · "+esc(roundName(t,m)):""}</span><span style="display:flex;gap:6px;align-items:center">${tchip}<span class="chip stchip">${chip}</span></span></div>
+    <div class="mhead"><span class="gno">Game ${E.gno[m.id]}${showRound?esc(rnS(t,m)):""}</span><span style="display:flex;gap:6px;align-items:center">${tchip}<span class="chip stchip">${chip}</span></span></div>
     ${teamRow(t,E,m,0,s[0],o)}${teamRow(t,E,m,1,s[1],o)}
     ${foot?`<div class="mfoot">${esc(foot)}</div>`:""}</${tag}>`;
 }
@@ -660,7 +656,7 @@ function viewDraw(t,E){
     return h;
   }
   const byes=byeTeams(t,E);
-  const T={W:["Winners Bracket","Unbeaten teams. Lose here and you drop to the losers bracket."],L:["Losers Bracket","One loss so far. Lose again and you're out."],G:["Grand Final",t.opts.reset?"The losers-bracket team has to win twice.":"One game decides it."],K:[t.teams.length===2?"Head to Head":"Knockout",t.teams.length===2?(bestOf(t)>1?"First to "+((bestOf(t)+1)/2)+" games takes the title.":"One game decides it."):"Lose once and you're out."],P:["3rd Place Playoff",""],R:["Round Robin",rrSub(t)],F:[(FIN[t.opts.finals]||FIN.gf).title||"Grand Final",(FIN[t.opts.finals]||FIN.gf).sub]};
+  const T={W:["Winners Bracket","Unbeaten teams. Lose here and you drop to the losers bracket."],L:["Losers Bracket","One loss so far. Lose again and you're out."],G:["Grand Final",t.opts.reset?"The losers-bracket team has to win twice.":"One game decides it."],K:[t.teams.length===2?"Head to Head":"Knockout",t.teams.length===2?"":"Lose once and you're out."],P:["3rd Place Playoff",""],R:["Round Robin",rrSub(t)],F:[(FIN[t.opts.finals]||FIN.gf).title||"Grand Final",(FIN[t.opts.finals]||FIN.gf).sub]};
   ["W","K","R","L","P","G","F"].forEach(bk=>{
     const ms=vis.filter(m=>m.bk===bk); if(!ms.length) return;
     h+=`<section><div class="bk-h"><h2>${T[bk][0]}</h2>${T[bk][1]?`<p>${esc(T[bk][1])}</p>`:""}</div>`;
@@ -669,7 +665,7 @@ function viewDraw(t,E){
     else{
       if(bk==="R") h+=rrDrawHTML(t,E,ms); else [...new Set(ms.map(m=>m.rd))].sort((a,b)=>a-b).forEach(rd=>{
         const rm=ms.filter(m=>m.rd===rd);
-        h+=`<h3 class="rd">${esc(roundName(t,rm[0]))}</h3>`;
+        if(t.teams.length>2) h+=`<h3 class="rd">${esc(roundName(t,rm[0]))}</h3>`;
         if(bk==="R"){const inR=new Set(); rm.forEach(m=>E.sides(m.id).forEach(x=>inR.add(x))); const out=t.slots.filter(x=>x&&!inR.has(x)); if(out.length) h+=`<p class="hint">Sitting out: ${out.map(x=>esc(tName(t,x))).join(", ")}</p>`;}
         h+=`<div class="grid">${rm.map(m=>card(t,E,m,false)).join("")}</div>`;
       });
@@ -699,7 +695,7 @@ function resultList(t,E,ms){
   return `<div class="res">${ms.map(m=>{const o=E.outcome(m.id), r=o.r, s=E.sides(m.id);
     const w0=s[0]===o.w, ws=r.games?(w0?r.ws[0]:r.ws[1]):(w0?r.sa:r.sb), ls=r.games?(w0?r.ws[1]:r.ws[0]):(w0?r.sb:r.sa), hasS=r.games?true:(num(r.sa)!=null&&num(r.sb)!=null);
     const ro=sync.readOnly||ui.hv!=null, tag=ro?"div":"button";
-    return `<${tag} class="resrow" ${ro?"":`data-act="open:${m.id}"`}><span style="min-width:0"><span class="meta">Game ${E.gno[m.id]} · ${esc(roundName(t,m))}${r.games?" · "+r.games.map(g=>(g.sa||0)+"–"+(g.sb||0)).join(", "):""}</span><br><span class="line">${o.draw?`<b>${esc(tName(t,s[0]))}</b> drew with ${esc(tName(t,s[1]))}`:`<b>${esc(tName(t,o.w))}</b> def. ${esc(tName(t,o.l))}`}</span></span><span class="score">${hasS?esc(ws)+"–"+esc(ls):""}</span></${tag}>`;}).join("")}</div>`;
+    return `<${tag} class="resrow" ${ro?"":`data-act="open:${m.id}"`}><span style="min-width:0"><span class="meta">Game ${E.gno[m.id]}${esc(rnS(t,m))}${r.games?" · "+r.games.map(g=>(g.sa||0)+"–"+(g.sb||0)).join(", "):""}</span><br><span class="line">${o.draw?`<b>${esc(tName(t,s[0]))}</b> drew with ${esc(tName(t,s[1]))}`:`<b>${esc(tName(t,o.w))}</b> def. ${esc(tName(t,o.l))}`}</span></span><span class="score">${hasS?esc(ws)+"–"+esc(ls):""}</span></${tag}>`;}).join("")}</div>`;
 }
 function viewResults(t,E){
   if(!t) return empty("No results yet","Results and standings appear here once the draw has started.","Set up teams","tab:setup");
@@ -809,7 +805,7 @@ function serFoot(t,E,m,st){
   const bo=bestOf(t); if(bo<2) return "";
   const o=E.outcome(m.id);
   if(o&&o.r&&o.r.games) return "Best of "+bo+" · "+o.r.games.map(g=>(g.sa||0)+"–"+(g.sb||0)).join(", ");
-  if(st==="ready") return "Best of "+bo+" · game "+(serGames(t,m.id).length+1);
+  if(st==="ready") return "Best of "+bo+" · Game "+(serGames(t,m.id).length+1);
   return "Best of "+bo;
 }
 function seriesList(t,s,g){
@@ -846,6 +842,7 @@ function callIt(){
   if(lead&&(rule==="leader"||finished||!dk)){d.w=lead;d.auto=false;}
   else if(dk){d.w="draw";d.auto=false;}
   else {toast("Level on cups. Play sudden death, then pick the winner.");}
+  if(d.w) stopTimer(ui.sheet);
   renderSheet();
 }
 function timeRuleText(t,id){
@@ -873,6 +870,12 @@ function timerBlock(t,E,id){
     ${up?"":`<button class="link" data-act="snd">${muted()?"Sound is off. Turn on":"Sound is on. Turn off"}</button>`}</div>`;
 }
 function renderSheet(){
+  const el=$("#sheet"), prev=el.querySelector(".sheet"), top=prev?prev.scrollTop:0;
+  renderSheetInner();
+  const n=el.querySelector(".sheet");
+  if(prev&&n&&!el.hidden){n.style.animation="none"; n.scrollTop=top;}   // stay where you were, no slide-in replay
+}
+function renderSheetInner(){
   const el=$("#sheet");
   if(ui.ps){renderPSheet(el);return;}
   if(ui.bk){renderBkSheet(el);return;}
@@ -881,7 +884,7 @@ function renderSheet(){
   if(!m||s[0]===undefined||s[1]===undefined||s[0]===BYE||s[1]===BYE){closeSheet();return;}
   const o=E.outcome(id), ex=!!o, bo=bestOf(t), dk=drawOK(t,id), c=cupsOf(t);
   el.hidden=false;
-  const head=`<p class="eyebrow">Game ${E.gno[id]} · ${esc(roundName(t,m))}</p>`;
+  const head=`<p class="eyebrow">Game ${E.gno[id]}${esc(rnS(t,m))}</p>`;
   if(ex&&bo>1&&o.r&&o.r.games){   // a finished series: show the games, allow undo
     const wi=s[0]===o.w?0:1;
     el.innerHTML=`<button class="scrim" data-act="cancel" aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">${head}
@@ -894,7 +897,7 @@ function renderSheet(){
   const x=TM[id], timerOut=!!(x&&x.mode!=="up"&&x.fired);
   const showDraw=dk&&(!t.opts.timer||timerOut||d.w==="draw");
   const gs=serGames(t,id), wa=gs.filter(q=>q.w===s[0]).length, wb=gs.filter(q=>q.w===s[1]).length;
-  const serbar=bo>1?`<div class="serbar"><span><b>Best of ${bo}</b> · first to ${(bo+1)/2} · game ${gs.length+1}</span><span class="serscore">${esc(tName(t,s[0]))} <b class="num">${wa}</b> – <b class="num">${wb}</b> ${esc(tName(t,s[1]))}</span>${gs.length?seriesList(t,s,gs)+`<button class="link" data-act="undog">Undo last game</button>`:""}</div>`:"";
+  const serbar=bo>1?`<div class="serbar"><span><b>Best of ${bo}</b> · Game ${gs.length+1}</span><span class="serscore">${esc(tName(t,s[0]))} <b class="num">${wa}</b> – <b class="num">${wb}</b> ${esc(tName(t,s[1]))}</span>${gs.length?seriesList(t,s,gs)+`<button class="link" data-act="undog">Undo last game</button>`:""}</div>`:"";
   el.innerHTML=`<button class="scrim" data-act="cancel" aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">
     ${head}
     ${serbar}
@@ -902,7 +905,7 @@ function renderSheet(){
     <h2 id="sh-t">Result?</h2>
     <div class="pick">${s.map((q,i)=>`<button class="pickbtn ${d.w===q?"on":""}" data-pw="${esc(q)}" data-act="w:${i}" aria-pressed="${d.w===q}"><span class="wl">${d.w===q?"Winner":""}</span>${pickLabel(t,q)}</button>`).join("")}</div>
     ${showDraw?`<div class="drawrow"><button class="drawbtn ${d.w==="draw"?"on":""}" data-pw="draw" data-act="w:draw" aria-pressed="${d.w==="draw"}">Draw</button></div>`:""}
-    <h3>Cups Sunk <small>winner starts at ${c}</small></h3>
+    <h3>Cups Sunk</h3>
     <div>${s.map((q,i)=>`<div class="srow"><span class="snm">${esc(tName(t,q))}</span><button class="step" data-act="inc:${i}:-1" aria-label="Minus one">−</button><input type="text" id="sc-${i}" inputmode="numeric" pattern="[0-9]*" data-score="${i}" value="${esc(d["s"+i])}" aria-label="${esc(tName(t,q))} cups" autocomplete="off"><button class="step" data-act="inc:${i}:1" aria-label="Plus one">+</button></div>`).join("")}</div>
     <p class="warn" id="sh-warn"></p>
     <div class="actions"><button class="btn primary" data-act="save" id="sh-save" ${d.w?"":"disabled"}>${bo>1?"Save game":"Save result"}</button><button class="btn" data-act="cancel">Cancel</button></div>
@@ -926,10 +929,12 @@ function updWarn(){
   el.textContent=msg.join(" ");
   const sv=$("#sh-save"); if(sv) sv.disabled=!d.w;
 }
+function stopTimer(id){const x=TM[id]; if(x&&x.running){tmPause(id); return true;} return false;}
 function autoPick(){
   const d=ui.draft; if(!d.auto) return;
   const a=num(d.s0), b=num(d.s1); if(a==null||b==null||a===b) return;
   const s=engine(S.t).sides(ui.sheet); d.w=a>b?s[0]:s[1];
+  if(stopTimer(ui.sheet)){const old=document.querySelector(".sheet .tmr"); if(old) old.outerHTML=timerBlock(S.t,engine(S.t),ui.sheet);}
   document.querySelectorAll(".pickbtn").forEach(btn=>{const on=btn.dataset.pw===d.w; btn.classList.toggle("on",on); btn.setAttribute("aria-pressed",on); const wl=btn.querySelector(".wl"); if(wl) wl.textContent=on?"Winner":"";});
 }
 function saveResult(){
@@ -1284,7 +1289,7 @@ function rrow(title,desc,ctl){return `<div class="rr"><div style="min-width:0;fl
 function rulesHTML(su){
   const rr=su.format==="rr", bo=([3,5].indexOf(+su.bestOf)>=0)?+su.bestOf:1;
   let h=`<section class="card"><div class="step-h"><span class="step-n">${rr?3:4}</span><h2>Game Rules</h2></div>`;
-  h+=`<div class="rr" style="flex-direction:column;align-items:stretch"><div><b>Match Length</b><p class="hint">${bo===1?"One game decides each match.":"Each match is a series, scored like sets in tennis. First to "+((bo+1)/2)+" games wins the match."}</p></div><div class="seg" role="group" aria-label="Match length">${[[1,"1 game"],[3,"Best of 3"],[5,"Best of 5"]].map(([k,l])=>`<button data-act="bo:${k}" aria-pressed="${bo===k}">${l}</button>`).join("")}</div></div>`;
+  h+=`<div class="rr" style="flex-direction:column;align-items:stretch"><div><b>Match Length</b><p class="hint">${bo===1?"One game decides each match.":"Each match is a series, scored like sets in tennis. First to "+((bo+1)/2)+" games wins the match."}</p></div><div class="seg" role="group" aria-label="Match length">${[[1,"1 Game"],[3,"Best of 3"],[5,"Best of 5"]].map(([k,l])=>`<button data-act="bo:${k}" aria-pressed="${bo===k}">${l}</button>`).join("")}</div></div>`;
   h+=rrow("Cups Per Game","The winner's score starts here. Go higher for overtime.",stp("cups",+su.cups||6,3,15));
   h+=sw("timer","Game Timer","Count down on each game, with a 1 minute warning and a siren. Off means a clock that counts up.");
   if(su.timer){
@@ -1319,12 +1324,14 @@ function finalsMatches(type,n){
   if(type==="top5") return [mk("S1",1,"r:2","r:3",{nm:"Round 1 · 2nd v 3rd",sc:true}),mk("S2",1,"r:4","r:5",{nm:"Round 1 · 4th v 5th",lp:5}),mk("S3",2,"w:S1","w:S2",{nm:"Round 2",lp:3}),mk("S4",2,"r:1","l:S1",{nm:"Round 2",lp:3}),mk("F1",3,"w:S3","w:S4",{nm:"Grand Final",lp:2})];
   return [];
 }
+function finalsFor(su,n){const k=FIN[su.finals]?su.finals:"gf"; return (k==="none"||n<3||n>=FIN[k].min)?k:"gf";}
 function finalsHTML(su,n){
-  const cur=FIN[su.finals]?su.finals:"gf";
+  const cur=finalsFor(su,n), eff=Math.max(n,3);
   let h=`<div class="rr" style="flex-direction:column;align-items:stretch"><div><b>Finals</b><p class="hint">What happens after the round robin.</p></div><div class="opts">`;
   ["none","gf","top3","top4","page","top5"].forEach(k=>{
-    const f=FIN[k], ok=k==="none"||n<3||n>=f.min, g=f.games?`${f.games} game${f.games>1?"s":""}`:"";
-    h+=`<button class="opt" data-act="fin:${k}" aria-pressed="${cur===k}" ${ok?"":"disabled"}><span class="dot"></span><span class="ot">${f.name}${k==="gf"?'<span class="tag">Default</span>':""}${ok?"":`<span class="tag" style="background:var(--surface);color:var(--muted)">${f.min}+ teams</span>`}</span><span class="od">${f.desc}</span>${g?`<span class="og num">${g}</span>`:""}</button>`;
+    const f=FIN[k]; if(k!=="none"&&f.min>eff) return;
+    const g=f.games?`${f.games} Game${f.games>1?"s":""}`:"";
+    h+=`<button class="opt" data-act="fin:${k}" aria-pressed="${cur===k}"><span class="dot"></span><span class="ot">${f.name}${k==="gf"?'<span class="tag">Default</span>':""}</span><span class="od">${f.desc}</span>${g?`<span class="og num">${g}</span>`:""}</button>`;
   });
   return h+`</div></div>`;
 }
@@ -1391,7 +1398,7 @@ function setupB(){
   const sg=suggested(n);
   h+=`<section class="card"><div class="step-h"><span class="step-n">2</span><h2>Format</h2></div><div class="opts">`;
   [["double","Double Knockout","Out after two losses. Every team plays at least twice."],["single","Single Knockout","Tennis style. Lose once and you're out. Quickest."],["rr","Round Robin","Everyone plays everyone. The ladder decides it."]].forEach(([k,l,d])=>{
-    const c=countGames(k,n,{third:su.third,finals:su.finals||"gf",rrCycles:rrCur()});
+    const c=countGames(k,n,{third:su.third,finals:finalsFor(su,n),rrCycles:rrCur()});
     let g=c==null?"":`${c} games`;
     if(k==="double"&&c!=null&&su.reset) g=`${c} games, or ${c+1} if the Grand Final Resets`;
     h+=`<button class="opt" data-act="fmt:${k}" aria-pressed="${su.format===k}"><span class="dot"></span><span class="ot">${l}${n>=2&&n<=8&&sg===k?'<span class="tag">Suggested</span>':""}</span><span class="od">${d}</span>${g?`<span class="og num">${g} with ${n} teams</span>`:""}</button>`;
@@ -1421,7 +1428,6 @@ function setupB(){
   h+=rulesHTML(su);
   const fmin=su.format==="single"?2:3;
   let errMsg=n<fmin?(n===2?"Double knockout and round robin need 3 or more teams. Pick single knockout for a head to head.":"Add at least "+fmin+" teams to make a draw."):n>8?"This app handles up to 8 teams.":"";
-  if(!errMsg&&su.format==="rr"){const fk=FIN[su.finals]?su.finals:"gf"; if(n<FIN[fk].min) errMsg=FIN[fk].name+" needs "+FIN[fk].min+" or more teams. Pick another finals option.";}
   h+=`<section>${errMsg?`<p class="err">${errMsg}</p>`:""}${ui.err?`<p class="err">${esc(ui.err)}</p>`:""}<button class="btn primary big" data-act="create" ${errMsg?"disabled":""}>Create draw</button></section>`;
   return h;
 }
@@ -1430,7 +1436,7 @@ function parseNames(s){return (s||"").split(/[\n,]+/).map(x=>x.trim()).filter(Bo
 function pcountText(c){if(!c) return "No names yet."; const tms=Math.floor(c/2); return `${c} player${c===1?"":"s"} → ${tms} team${tms===1?"":"s"}${c%2?". Odd number, so one player won't have a partner yet.":""}`;}
 function setupLive(t,E){
   const ro=sync.readOnly, o=t.opts||{};
-  const rules=[cupsOf(t)+" cups"]; if(bestOf(t)>1) rules.push("best of "+bestOf(t)); if(o.timer) rules.push(o.timerMins+" min timer"); if(o.draws) rules.push("draws allowed"); if(o.usePoints) rules.push("points "+o.winPts+"/"+o.drawPts);
+  const rules=[cupsOf(t)+" Cups"]; if(bestOf(t)>1) rules.push("Best of "+bestOf(t)); if(o.timer) rules.push(o.timerMins+" Min Timer"); if(o.draws) rules.push("Draws Allowed"); if(o.usePoints) rules.push("Points "+o.winPts+"/"+o.drawPts);
   let h=`<section class="card"><div class="sec-h"><h2>This Tournament</h2></div>
     <div class="places">
       <div class="place"><span class="hint">Format</span><span><b>${FMT[t.format]}</b></span><span></span></div>
@@ -1464,7 +1470,7 @@ function createT(){
   const su=S.setup, teams=clone(realTeams()), n=teams.length;
   const mn=su.format==="single"?2:3; if(n<mn||n>8){ui.err="Use between "+mn+" and 8 teams.";render();return;}
   ui.err="";
-  const rr=su.format==="rr", bo=([3,5].indexOf(+su.bestOf)>=0)?+su.bestOf:1, fin=rr?(FIN[su.finals]?su.finals:"gf"):"none";
+  const rr=su.format==="rr", bo=([3,5].indexOf(+su.bestOf)>=0)?+su.bestOf:1, fin=rr?finalsFor(su,n):"none";
   const opts={reset:!!su.reset,third:!!su.third,rrFinal:fin!=="none",finals:fin,rrCycles:rr?rrCur():null,bestOf:bo,cups:Math.max(3,Math.min(15,Math.round(+su.cups)||6)),timer:!!su.timer,timerMins:Math.max(1,Math.min(60,Math.round(+su.timerMins)||10)),timeUp:(su.timeUp==="draw"&&bo===1)?"draw":"leader",draws:rr&&bo===1&&(!!su.draws||!!su.timer),usePoints:rr&&!!su.usePoints,winPts:Math.max(0,Math.round(+su.winPts)||3),drawPts:Math.max(0,Math.round(+su.drawPts)||0)};
   const seeding=su.format==="rr"?"random":su.seeding;
   S.t={name:su.name||"Tournament",format:su.format,seeding,opts,teams,slots:makeSlots(su.format,seeding,teams),matches:buildMatches(su.format,n,opts),results:{},series:{},created:Date.now()};
@@ -1489,7 +1495,7 @@ document.addEventListener("click",e=>{
     case "w": {const t=S.t, s=engine(t).sides(ui.sheet), d=ui.draft, nw=p[1]==="draw"?"draw":s[+p[1]];
       if(nw==="draw"&&!drawOK(t,ui.sheet)) break;
       if(d.w&&d.w!=="draw"&&nw!=="draw"&&d.w!==nw){const a=d.s0,b=d.t0; d.s0=d.s1; d.s1=a; d.t0=d.t1; d.t1=b;}
-      d.w=nw; d.auto=false; applyWin(); renderSheet(); break;}
+      d.w=nw; d.auto=false; stopTimer(ui.sheet); applyWin(); renderSheet(); break;}
     case "inc": {const k="s"+p[1], v=num(ui.draft[k])||0; ui.draft[k]=String(Math.max(0,v+(+p[2]))); ui.draft["t"+p[1]]=true; autoPick(); renderSheet(); break;}
     case "save": saveResult(); break;
     case "clear": delete S.t.results[ui.sheet]; if(S.t.series) delete S.t.series[ui.sheet]; delete TM[ui.sheet]; tmSave(); prune(S.t); closeSheet(true); persist(true); render(); toast("Result cleared"); break;

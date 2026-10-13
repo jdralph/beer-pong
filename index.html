@@ -228,22 +228,53 @@ select:focus-visible{outline:2px solid var(--court);outline-offset:2px}
 .tile b{font-family:var(--display);font-size:24px;font-weight:600;line-height:1.1}
 .tile span{font-size:12px;color:var(--muted)}
 .lp{padding:8px 4px;font-weight:600;overflow-wrap:anywhere}
-.pickbtn.draw{grid-column:1/-1;min-height:56px}
 .rcount small{font-size:13px;font-weight:600;color:var(--muted)}
 .tchip{font-variant-numeric:tabular-nums;color:var(--ink)}
 .row-r{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 
-/* Game timer */
-.tmr{border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface-2)}
-.tmr.up{border-color:var(--danger)}
+/* Game timer / clock: amber, red in the last minute */
+:root{--on-win:#fff;--low:#d9301f;--low-ink:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--on-win:#052113}}
+:root[data-theme="dark"]{--on-win:#052113}
+.tmr{border:0;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--ball);color:var(--ball-ink)}
+.tmr.low{background:var(--low);color:var(--low-ink)}
 .tmr-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.tmr-lab{font-weight:600;color:var(--muted)}
-.tmr-t{font-family:var(--display);font-size:46px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
-.tmr.up .tmr-t{color:var(--danger)}
+.tmr-lab{font-weight:700;opacity:.8}
+.tmr-t{font-family:var(--display);font-size:56px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
 .tmr-ctl{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tmr .btn{background:var(--surface);color:var(--ink)}
+.tmr .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tmr .btn:disabled{opacity:.45;cursor:not-allowed}
+.tmr .step{background:var(--surface);color:var(--ink)}
+.tmr .rcount,.tmr .rcount small{color:inherit}
+.tmr .rcount small{opacity:.75}
+.tmr-note{margin:0;font-size:14px}
+.tmr .link{color:inherit;align-self:flex-start;font-size:14px;padding:0}
 .tup{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.tup span{flex:1 1 180px;font-size:14px;color:var(--muted)}
-.tup b{color:var(--danger)}
+.tup span{flex:1 1 180px;font-size:14px}
+.tup .btn.primary{background:var(--ink);color:var(--bg)}
+.serbar{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;background:var(--surface-2)}
+.serscore{font-size:16px;overflow-wrap:anywhere}
+.serscore b{font-family:var(--display);font-size:20px}
+
+/* Game status on match cards */
+.chip.tchip{background:var(--ball);color:var(--ball-ink);border-color:transparent}
+.chip.tchip.low{background:var(--low);color:var(--low-ink)}
+.s-ready{border-color:var(--win)}
+.s-ready .stchip{background:var(--win);color:var(--on-win);border-color:transparent}
+.s-ingame{border-color:var(--ball);box-shadow:0 0 0 2px var(--ball)}
+.s-ingame .stchip{background:var(--ball);color:var(--ball-ink);border-color:transparent}
+.s-unavail{background:var(--surface-2);box-shadow:none;opacity:.55}
+.s-ready .stchip::before,.s-ingame .stchip::before,.s-unavail .stchip::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-right:6px;vertical-align:1px}
+.opt:disabled{opacity:.5;cursor:not-allowed}
+
+/* Result sheet: bigger, centred names and a small draw button */
+.pickbtn{align-items:center;text-align:center;min-height:112px;padding:14px 8px}
+.pickbtn b{display:block;width:100%}
+.pickbtn b.pl1,.pickbtn b.pn{font-size:26px;line-height:1.12}
+.drawrow{display:flex;justify-content:center}
+.drawbtn{border:2px solid var(--line);background:var(--surface-2);border-radius:999px;padding:7px 26px;font-family:var(--display);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.05em}
+.drawbtn.on{border-color:var(--court);background:var(--court);color:var(--court-ink)}
 
 /* Live draw */
 .dw{position:fixed;inset:0;z-index:40;background:var(--bg);overflow:auto;display:flex;flex-direction:column}
@@ -294,13 +325,13 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
 const ord=n=>{const s=["th","st","nd","rd"],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);};
 const num=v=>(v===""||v==null||isNaN(+v))?null:+v;
 const clone=o=>JSON.parse(JSON.stringify(o));
-const FMT={double:"Double knockout",single:"Single knockout",rr:"Round robin"};
-const SEED={seeded:"Seeded",random:"Random draw",reverse:"Reverse seeded"};
+const FMT={double:"Double Knockout",single:"Single Knockout",rr:"Round Robin"};
+const SEED={seeded:"Seeded",random:"Random Draw",reverse:"Reverse Seeded"};
 
 /* ---------- State ---------- */
 function exampleTeams(){return [["Mia","Josh"],["Liam","Ava"],["Noah","Zoe"],["Ella","Sam"],["Ruby","Kai"]].map(([a,b])=>({id:uid(),p1:a,p2:b,name:""}));}
 function blankTeams(n){return Array.from({length:n},()=>({id:uid(),p1:"",p2:"",name:""}));}
-function defaultState(){return {v:2,rev:0,ts:0,example:false,roster:[],history:[],setup:{name:"Beer Pong Night",mode:"roster",teams:blankTeams(4),picked:[],drawStyle:"auto",format:"double",seeding:"random",reset:true,third:false,rrFinal:true,cups:6,timer:false,timerMins:10,timeUp:"leader",draws:false,usePoints:false,winPts:3,drawPts:1},t:null};}
+function defaultState(){return {v:2,rev:0,ts:0,example:false,roster:[],history:[],setup:{name:"Beer Pong Night",mode:"roster",teams:blankTeams(4),picked:[],drawStyle:"auto",format:"double",seeding:"random",reset:true,third:false,rrFinal:true,finals:"gf",bestOf:1,cups:6,timer:false,timerMins:10,timeUp:"leader",draws:false,usePoints:false,winPts:3,drawPts:1},t:null};}
 function norm(o){
   const d=defaultState();
   o.roster=Array.isArray(o.roster)?o.roster.filter(p=>p&&p.id&&p.name):[];
@@ -314,7 +345,7 @@ function norm(o){
 let S=null; try{S=JSON.parse(lsGet(LS));}catch(e){}
 if(!S||!S.setup) S=defaultState();
 S=norm(S);
-const ui={tab:lsGet(LS+":tab")||(S.t?"draw":"setup"),view:"bracket",sheet:null,draft:null,confirm:false,err:"",ps:null,pd:null,pdel:false,perr:"",imp:null,impErr:""};
+const ui={tab:lsGet(LS+":tab")||(S.t?"draw":"setup"),view:"bracket",sheet:null,draft:null,confirm:false,err:"",ps:null,pd:null,pdel:false,perr:"",imp:null,impErr:"",hv:null,hdel:false};
 const sync={ref:null,status:"local",readOnly:false,writer:false,pending:null,chain:Promise.resolve(),timer:null};
 
 /* ---------- Formats ---------- */
@@ -356,7 +387,7 @@ function buildMatches(f,n,o){
     for(let k=0;k<m/2;k++){const x=arr[k],y=arr[m-1-k]; if(x&&y) ms.push({id:"R"+r+"-"+(k+1),bk:"R",rd:r,cy:cy,md:md,a:"s"+x,b:"s"+y,lp:null});}
     arr=[arr[0],arr[m-1]].concat(arr.slice(1,m-1));
   }
-  if(o.rrFinal) ms.push({id:"F1",bk:"F",rd:1,a:"r:1",b:"r:2",lp:2});
+  const fk=o.finals||(o.rrFinal?"gf":"none"); if(FIN[fk]&&n>=FIN[fk].min) finalsMatches(fk,n).forEach(x=>ms.push(x));
   return ms;
 }
 
@@ -437,8 +468,13 @@ function engine(t){
       const p=M.P1?outcome("P1"):undefined; if(p&&!p.bye){add(p.w,3);add(p.l,4);} else if(p&&p.bye) add(p.w,3);
       ks.forEach(m=>{if(m.lp&&m!==fin){const x=outcome(m.id); if(x&&!x.bye) add(x.l,m.lp);}});
     } else {
-      const L=ladder(), f=t.matches.find(m=>m.bk==="F");
-      if(f){const o=outcome(f.id); if(o){add(o.w,1);add(o.l,2);} if(L.complete) L.rows.forEach((r,i)=>{if(i>=2) add(r.id,i+1);});}
+      const L=ladder(), fm=t.matches.filter(m=>m.bk==="F"), fk=t.opts.finals||(t.opts.rrFinal?"gf":"none");
+      if(fm.length){
+        const o=outcome("F1"); if(o){add(o.w,1);add(o.l,2);}
+        fm.forEach(m=>{if(m.lp&&m.id!=="F1"){const x=outcome(m.id); if(x&&!x.bye) add(x.l,m.lp);}});
+        const k=(FIN[fk]&&FIN[fk].team)||2;
+        if(L.complete) L.rows.forEach((r,i)=>{if(i>=k) add(r.id,i+1);});
+      }
       else if(L.complete) L.rows.forEach((r,i)=>add(r.id,i+1));
     }
     out.sort((a,b)=>a.pl-b.pl);
@@ -456,14 +492,15 @@ function tName(t,id){if(id===BYE) return "Bye"; const tm=teamById(t,id); return 
 function tSub(t,id){const tm=teamById(t,id); return tm&&(tm.name||"").trim()?players(tm):"";}
 function seedOf(t,id){if(t.seeding==="random"||t.format==="rr") return null; const i=t.teams.findIndex(x=>x.id===id); return i<0?null:i+1;}
 function roundName(t,m){
+  if(m.nm) return m.nm;
   const max=bk=>Math.max.apply(null,t.matches.filter(x=>x.bk===bk).map(x=>x.rd));
-  if(m.bk==="G") return m.cond?"Grand final reset":"Grand final";
-  if(m.bk==="W") return m.rd===max("W")?"Winners final":"Winners round "+m.rd;
-  if(m.bk==="L") return m.rd===max("L")?"Losers final":"Losers round "+m.rd;
-  if(m.bk==="K"){const back=max("K")-m.rd; return back===0?"Final":back===1?"Semi-finals":back===2?"Quarter-finals":"Round "+m.rd;}
-  if(m.bk==="P") return "3rd place playoff";
-  if(m.bk==="R") return "Round "+(m.cy||1)+" · Match day "+(m.md||m.rd);
-  return "Grand final";
+  if(m.bk==="G") return m.cond?"Grand Final Reset":"Grand Final";
+  if(m.bk==="W") return m.rd===max("W")?"Winners Final":"Winners Round "+m.rd;
+  if(m.bk==="L") return m.rd===max("L")?"Losers Final":"Losers Round "+m.rd;
+  if(m.bk==="K"){const back=max("K")-m.rd; return back===0?"Final":back===1?"Semi-Finals":back===2?"Quarter-Finals":"Round "+m.rd;}
+  if(m.bk==="P") return "3rd Place Playoff";
+  if(m.bk==="R") return "Round "+(m.cy||1)+" · Match Day "+(m.md||m.rd);
+  return "Grand Final";
 }
 function describe(E,r){
   const p=r.split(":");
@@ -549,7 +586,7 @@ function render(){
     sub=`${FMT[t.format]} · ${t.teams.length} teams · ${done} of ${vis.length} games played`;}
   $("#hdr").innerHTML=`<div class="hdr-in"><div style="min-width:0"><h1 id="h-title">${esc((t?t.name:S.setup.name)||"Tournament")}</h1><p class="sub">${esc(sub)}</p></div>${syncHTML()}</div>`;
   // tabs
-  const ready=t?t.matches.filter(m=>E.status(m.id)==="ready").length:0;
+  const ready=t?t.matches.filter(m=>E.status(m.id)==="ready"&&!gameState(t,E,m.id)).length:0;
   $("#tabs").innerHTML=[["draw","Draw"],["score","Score"],["results","Results"],["players","Players"],["setup","Setup"]].map(([k,l])=>
     `<button data-act="tab:${k}" ${ui.tab===k?'aria-current="page"':""}><span class="tb">${ICONS[k]}${k==="score"&&ready&&!sync.readOnly?`<span class="badge num">${ready}</span>`:""}</span>${l}</button>`).join("");
   const v=ui.tab==="draw"?viewDraw(t,E):ui.tab==="score"?viewScore(t,E):ui.tab==="results"?viewResults(t,E):ui.tab==="players"?viewPlayers(t,E):viewSetup(t,E);
@@ -564,14 +601,14 @@ function champHTML(t,E){
 }
 function teamRow(t,E,m,side,id,o){
   const ref=side===0?m.a:m.b;
-  if(id===undefined) return `<div class="trow tbd"><span class="seed none"></span><span class="nm">${esc(m.bk==="G"&&m.cond?"Grand final team":describe(E,ref))}</span><span class="sc"></span></div>`;
+  if(id===undefined) return `<div class="trow tbd"><span class="seed none"></span><span class="nm">${esc(m.bk==="G"&&m.cond?"Grand Final team":describe(E,ref))}</span><span class="sc"></span></div>`;
   const sd=seedOf(t,id), won=o&&!o.draw&&o.w===id, lost=o&&!o.draw&&o.l===id;
-  const sc=o&&o.r?(side===0?o.r.sa:o.r.sb):"";
+  let sc=o&&o.r?(o.r.games?String(o.r.ws[side]):(side===0?o.r.sa:o.r.sb)):""; if(!o&&t.series&&t.series[m.id]) sc=String(t.series[m.id].g.filter(x=>x.w===id).length);
   const sub=tSub(t,id);
   return `<div class="trow ${won?"won":""} ${lost?"lost":""}"><span class="seed ${sd?"":"none"}">${sd||""}</span><span class="nm"><b>${esc(tName(t,id))}</b>${won?'<span class="tick" aria-label="winner">✓</span>':""}${sub?`<small>${esc(sub)}</small>`:""}</span><span class="sc">${esc(sc)}</span></div>`;
 }
 function footText(t,E,m,st){
-  if(st==="skip") return "Not needed. The unbeaten team won the grand final.";
+  if(st==="skip") return "Not needed. The unbeaten team won the Grand Final.";
   if(m.cond) return "Played only if the losers-bracket team wins game "+E.gno[m.cond]+". Winner takes the title.";
   if(m.bk==="R") return "";
   const parts=[], wd=E.dest(m.id,"w"), ld=E.dest(m.id,"l");
@@ -580,7 +617,7 @@ function footText(t,E,m,st){
   else if(wd) parts.push("Winner → game "+E.gno[wd]);
   else parts.push("Winner takes the title");
   if(m.bk!=="G"&&m.bk!=="P"){
-    if(ld) parts.push("Loser → game "+E.gno[ld]+(m.bk==="W"?" (second chance)":""));
+    if(ld) parts.push("Loser → game "+E.gno[ld]+(m.bk==="W"||m.sc?" (second chance)":""));
     else if(m.lp){const tie=t.matches.filter(x=>x.lp===m.lp&&x.bk===m.bk&&E.status(x.id)!=="bye").length>1; parts.push("Loser out · "+(tie?"=":"")+ord(m.lp));}
   }
   return parts.join(" · ");
@@ -589,12 +626,13 @@ function card(t,E,m,showRound){
   const st=E.status(m.id), s=E.sides(m.id), o=E.outcome(m.id);
   let chip={done:"Played",ready:"Ready",wait:"Waiting",maybe:"If needed",skip:"Not needed"}[st];
   if(st==="done"&&o&&o.draw) chip="Draw";
-  const tx=TM[m.id], tchip=(tx&&(tx.running||tx.started)&&st==="ready")?`<span class="chip tchip" title="Game timer">⏱ <span data-timer="${esc(m.id)}">${fmtT(tmLeft(tx))}</span></span>`:"";
+  const gs=gameState(t,E,m.id); if(gs==="ingame") chip="In game"; else if(gs==="unavail") chip="Unavailable";
+  const tx=TM[m.id], tchip=(tx&&tx.started&&st==="ready")?`<span class="chip tchip ${tmLow(tx)?"low":""}" data-tmbox="${esc(m.id)}" title="Game Timer">⏱ <span data-timer="${esc(m.id)}">${tmDisp(tx)}</span></span>`:"";
   const can=!sync.readOnly&&(st==="ready"||st==="done");
   const tag=can?"button":"div";
-  const foot=footText(t,E,m,st);
-  return `<${tag} class="match s-${st}" ${can?`data-act="open:${m.id}" aria-label="Game ${E.gno[m.id]}: ${st==="done"?"edit result":"enter result"}"`:""}>
-    <div class="mhead"><span class="gno">Game ${E.gno[m.id]}${showRound?" · "+esc(roundName(t,m)):""}</span><span style="display:flex;gap:6px;align-items:center">${tchip}<span class="chip">${chip}</span></span></div>
+  const foot=[footText(t,E,m,st),serFoot(t,E,m,st)].filter(Boolean).join(" · ");
+  return `<${tag} class="match s-${gs||st}" ${can?`data-act="open:${m.id}" aria-label="Game ${E.gno[m.id]}: ${st==="done"?"edit result":"enter result"}"`:""}>
+    <div class="mhead"><span class="gno">Game ${E.gno[m.id]}${showRound?" · "+esc(roundName(t,m)):""}</span><span style="display:flex;gap:6px;align-items:center">${tchip}<span class="chip stchip">${chip}</span></span></div>
     ${teamRow(t,E,m,0,s[0],o)}${teamRow(t,E,m,1,s[1],o)}
     ${foot?`<div class="mfoot">${esc(foot)}</div>`:""}</${tag}>`;
 }
@@ -613,21 +651,21 @@ function viewDraw(t,E){
   h+=`<div class="seg" role="group" aria-label="View">${[["bracket","Bracket"],["timeline","Timeline"]].map(([k,l])=>`<button data-act="view:${k}" aria-pressed="${ui.view===k}">${l}</button>`).join("")}</div>`;
   const vis=t.matches.filter(m=>E.status(m.id)!=="bye");
   if(ui.view==="timeline"){
-    const grp=[["Ready to play",["ready"]],["Coming up",["wait","maybe"]],["Played",["done"]]];
+    const grp=[["Ready to Play",["ready"]],["Coming Up",["wait","maybe"]],["Played",["done"]]];
     grp.forEach(([title,sts])=>{
       const ms=vis.filter(m=>sts.includes(E.status(m.id)));
       if(title==="Played") ms.reverse();
-      h+=`<section><div class="sec-h"><h2>${title}</h2><span class="hint num">${ms.length} game${ms.length===1?"":"s"}</span></div>${ms.length?`<div class="grid">${ms.map(m=>card(t,E,m,true)).join("")}</div>`:`<p class="hint">${title==="Played"?"No results yet.":title==="Ready to play"?"Nothing ready right now.":"Nothing left to schedule."}</p>`}</section>`;
+      h+=`<section><div class="sec-h"><h2>${title}</h2><span class="hint num">${ms.length} game${ms.length===1?"":"s"}</span></div>${ms.length?`<div class="grid">${ms.map(m=>card(t,E,m,true)).join("")}</div>`:`<p class="hint">${title==="Played"?"No results yet.":title==="Ready to Play"?"Nothing ready right now.":"Nothing left to schedule."}</p>`}</section>`;
     });
     return h;
   }
   const byes=byeTeams(t,E);
-  const T={W:["Winners bracket","Unbeaten teams. Lose here and you drop to the losers bracket."],L:["Losers bracket","One loss so far. Lose again and you're out."],G:["Grand final",t.opts.reset?"The losers-bracket team has to win twice.":"One game decides it."],K:["Knockout","Lose once and you're out."],P:["3rd place playoff",""],R:["Round robin",rrSub(t)],F:["Grand final","Top two on the ladder."]};
+  const T={W:["Winners Bracket","Unbeaten teams. Lose here and you drop to the losers bracket."],L:["Losers Bracket","One loss so far. Lose again and you're out."],G:["Grand Final",t.opts.reset?"The losers-bracket team has to win twice.":"One game decides it."],K:[t.teams.length===2?"Head to Head":"Knockout",t.teams.length===2?(bestOf(t)>1?"First to "+((bestOf(t)+1)/2)+" games takes the title.":"One game decides it."):"Lose once and you're out."],P:["3rd Place Playoff",""],R:["Round Robin",rrSub(t)],F:[(FIN[t.opts.finals]||FIN.gf).title||"Grand Final",(FIN[t.opts.finals]||FIN.gf).sub]};
   ["W","K","R","L","P","G","F"].forEach(bk=>{
     const ms=vis.filter(m=>m.bk===bk); if(!ms.length) return;
     h+=`<section><div class="bk-h"><h2>${T[bk][0]}</h2>${T[bk][1]?`<p>${esc(T[bk][1])}</p>`:""}</div>`;
     if((bk==="W"||bk==="K")&&byes.length) h+=`<p class="note">Bye${byes.length>1?"s":""} into round 2: ${byes.map(id=>esc(tName(t,id))).join(", ")}</p>`;
-    if(bk==="G"||bk==="P"||bk==="F"){h+=`<div class="grid">${ms.map(m=>card(t,E,m,false)).join("")}</div>`;}
+    if(bk==="G"||bk==="P"||bk==="F"){h+=`<div class="grid">${ms.map(m=>card(t,E,m,bk==="F"&&ms.length>1)).join("")}</div>`;}
     else{
       if(bk==="R") h+=rrDrawHTML(t,E,ms); else [...new Set(ms.map(m=>m.rd))].sort((a,b)=>a-b).forEach(rd=>{
         const rm=ms.filter(m=>m.rd===rd);
@@ -645,8 +683,8 @@ function viewScore(t,E){
   let h=champHTML(t,E);
   if(sync.readOnly) h+=`<p class="note">View only. Results are entered by the organiser and update here live.</p>`;
   const vis=t.matches.filter(m=>E.status(m.id)!=="bye");
-  const ready=vis.filter(m=>E.status(m.id)==="ready");
-  h+=`<section><div class="sec-h"><h2>Ready to play</h2>${ready.length&&!sync.readOnly?`<span class="hint">Tap a game to enter the result</span>`:""}</div>`;
+  const ready=vis.filter(m=>E.status(m.id)==="ready").sort((a,b)=>gRank(t,E,a.id)-gRank(t,E,b.id));
+  h+=`<section><div class="sec-h"><h2>Ready to Play</h2>${ready.length&&!sync.readOnly?`<span class="hint">Tap a game to enter the result</span>`:""}</div>`;
   if(ready.length) h+=`<div class="grid">${ready.map(m=>card(t,E,m,true)).join("")}</div>`;
   else {
     const waiting=vis.filter(m=>E.status(m.id)==="wait").length;
@@ -659,9 +697,9 @@ function viewScore(t,E){
 }
 function resultList(t,E,ms){
   return `<div class="res">${ms.map(m=>{const o=E.outcome(m.id), r=o.r, s=E.sides(m.id);
-    const ws=s[0]===o.w?r.sa:r.sb, ls=s[0]===o.w?r.sb:r.sa, hasS=num(r.sa)!=null&&num(r.sb)!=null;
-    const tag=sync.readOnly?"div":"button";
-    return `<${tag} class="resrow" ${sync.readOnly?"":`data-act="open:${m.id}"`}><span style="min-width:0"><span class="meta">Game ${E.gno[m.id]} · ${esc(roundName(t,m))}</span><br><span class="line">${o.draw?`<b>${esc(tName(t,s[0]))}</b> drew with ${esc(tName(t,s[1]))}`:`<b>${esc(tName(t,o.w))}</b> def. ${esc(tName(t,o.l))}`}</span></span><span class="score">${hasS?esc(ws)+"–"+esc(ls):""}</span></${tag}>`;}).join("")}</div>`;
+    const w0=s[0]===o.w, ws=r.games?(w0?r.ws[0]:r.ws[1]):(w0?r.sa:r.sb), ls=r.games?(w0?r.ws[1]:r.ws[0]):(w0?r.sb:r.sa), hasS=r.games?true:(num(r.sa)!=null&&num(r.sb)!=null);
+    const ro=sync.readOnly||ui.hv!=null, tag=ro?"div":"button";
+    return `<${tag} class="resrow" ${ro?"":`data-act="open:${m.id}"`}><span style="min-width:0"><span class="meta">Game ${E.gno[m.id]} · ${esc(roundName(t,m))}${r.games?" · "+r.games.map(g=>(g.sa||0)+"–"+(g.sb||0)).join(", "):""}</span><br><span class="line">${o.draw?`<b>${esc(tName(t,s[0]))}</b> drew with ${esc(tName(t,s[1]))}`:`<b>${esc(tName(t,o.w))}</b> def. ${esc(tName(t,o.l))}`}</span></span><span class="score">${hasS?esc(ws)+"–"+esc(ls):""}</span></${tag}>`;}).join("")}</div>`;
 }
 function viewResults(t,E){
   if(!t) return empty("No results yet","Results and standings appear here once the draw has started.","Set up teams","tab:setup");
@@ -673,7 +711,7 @@ function viewResults(t,E){
     h+=`<section><div class="sec-h"><h2>Ladder</h2><span class="hint num">${L.complete?"Final":"Provisional"} · ${L.played} of ${L.total} played</span></div>
       <div class="tbl-wrap"><table><thead><tr><th>Pos</th><th>Team</th><th>P</th><th>W</th>${dr?"<th>D</th>":""}<th>L</th><th>For</th><th>Agst</th><th>+/−</th>${pts?"<th>Pts</th>":""}</tr></thead><tbody>
       ${L.rows.map((r,i)=>`<tr><td class="pos">${i+1}</td><td class="tm">${esc(tName(t,r.id))}</td><td>${r.P}</td><td>${r.W}</td>${dr?`<td>${r.Dr}</td>`:""}<td>${r.L}</td><td>${r.PF}</td><td>${r.PA}</td><td>${r.D>0?"+":""}${r.D}</td>${pts?`<td><b>${r.Pts}</b></td>`:""}</tr>`).join("")}
-      </tbody></table></div><p class="hint">${pts?`Ranked by points: ${t.opts.winPts} for a win, ${t.opts.drawPts} for a draw.`:"Ranked by wins."} Ties split by head-to-head (two teams), then cup difference, then cups for.${t.opts.rrFinal?" Top two play the grand final.":""}</p></section>`;
+      </tbody></table></div><p class="hint">${pts?`Ranked by points: ${t.opts.winPts} for a win, ${t.opts.drawPts} for a draw.`:"Ranked by wins."} Ties split by head-to-head (two teams), then cup difference, then cups for.${(t.opts.finals&&t.opts.finals!=="none")?" Finals: "+FIN[t.opts.finals].name+".":""}</p></section>`;
     if(pl.length) h+=placesHTML(t,pl,[],st);
   } else {
     const placed=new Set(pl.map(p=>p.id));
@@ -683,12 +721,12 @@ function viewResults(t,E){
       const pa=pl.find(p=>p.id===a.id), pb=pl.find(p=>p.id===b.id);
       const ra=pa?pa.pl:0, rb=pb?pb.pl:0; // still-in teams first
       if(ra!==rb) return ra-rb; return (b.W-a.W)||(a.L-b.L)||(b.D-a.D);});
-    h+=`<section><div class="sec-h"><h2>Team records</h2></div><div class="tbl-wrap"><table><thead><tr><th></th><th>Team</th><th>W</th><th>L</th><th>For</th><th>Agst</th><th>+/−</th></tr></thead><tbody>
+    h+=`<section><div class="sec-h"><h2>Team Records</h2></div><div class="tbl-wrap"><table><thead><tr><th></th><th>Team</th><th>W</th><th>L</th><th>For</th><th>Agst</th><th>+/−</th></tr></thead><tbody>
       ${rows.map(r=>{const p=pl.find(x=>x.id===r.id);return `<tr><td class="pos">${p?(p.tie?"=":"")+ord(p.pl):"–"}</td><td class="tm">${esc(tName(t,r.id))}</td><td>${r.W}</td><td>${r.L}</td><td>${r.PF}</td><td>${r.PA}</td><td>${r.D>0?"+":""}${r.D}</td></tr>`;}).join("")}
       </tbody></table></div><p class="hint">For and against are cups, and count only games with cups entered.</p></section>`;
   }
   const vis=t.matches.filter(m=>E.status(m.id)==="done").sort((a,b)=>E.gno[b.id]-E.gno[a.id]);
-  h+=`<section><div class="sec-h"><h2>Game results</h2></div>${vis.length?resultList(t,E,vis):`<p class="hint">No results yet. Enter them on the Score tab.</p>`}</section>`;
+  h+=`<section><div class="sec-h"><h2>Game Results</h2></div>${vis.length?resultList(t,E,vis):`<p class="hint">No results yet. Enter them on the Score tab.</p>`}</section>`;
   return h;
 }
 function placesHTML(t,pl,alive,st){
@@ -722,21 +760,21 @@ function addSamples(){
 function allTourneys(){const a=(S.history||[]).slice(); if(S.t&&Object.keys(S.t.results).length) a.push(S.t); return a;}
 function playerStats(){
   const st={};
-  const g=id=>st[id]||(st[id]={id:id,P:0,W:0,D:0,L:0,CF:0,CA:0,CG:0,Ti:0,T:0,partners:{}});
+  const g=id=>st[id]||(st[id]={id:id,P:0,W:0,D:0,L:0,CF:0,CA:0,CG:0,Ti:0,T:0,BS:0,ev:[],partners:{}});
   allTourneys().forEach(t=>{
     let E; try{E=engine(t);}catch(e){return;}
     const pids=tm=>[tm.p1id,tm.p2id].filter(Boolean);
     t.teams.forEach(tm=>pids(tm).forEach(id=>{g(id).Ti++;}));
     t.matches.forEach(m=>{
       const o=E.outcome(m.id); if(!o||o.bye) return;
-      const s=E.sides(m.id), sa=num(o.r.sa), sb=num(o.r.sb);
+      const s=E.sides(m.id), gl=o.r.games?o.r.games:[{sa:o.r.sa,sb:o.r.sb}];   // every game played, including each game of a series
       [0,1].forEach(i=>{
         const tm=t.teams.find(x=>x.id===s[i]); if(!tm) return;
-        const win=!o.draw&&o.w===s[i], los=!o.draw&&o.l===s[i];
-        const cf=i===0?sa:sb, ca=i===0?sb:sa, ids=pids(tm);
+        const win=!o.draw&&o.w===s[i], los=!o.draw&&o.l===s[i], ids=pids(tm);
         ids.forEach(id=>{
           const r=g(id); r.P++; if(win) r.W++; else if(los) r.L++; else r.D++;
-          if(sa!=null&&sb!=null){r.CF+=cf; r.CA+=ca; r.CG++;}
+          r.ev.push({at:o.r.at||0,w:win});
+          gl.forEach(q=>{const a=num(q.sa), b=num(q.sb); if(a!=null&&b!=null){r.CF+=(i===0?a:b); r.CA+=(i===0?b:a); r.CG++;}});
           ids.forEach(o2=>{if(o2!==id){const pp=r.partners[o2]||(r.partners[o2]={P:0,W:0}); pp.P++; if(win) pp.W++;}});
         });
       });
@@ -744,13 +782,55 @@ function playerStats(){
     const champ=E.placings().find(x=>x.pl===1);
     if(champ){const tm=t.teams.find(x=>x.id===champ.id); if(tm) pids(tm).forEach(id=>{g(id).T++;});}
   });
+  Object.keys(st).forEach(id=>{   // longest run of wins in a row, oldest match first; a loss or draw ends the run
+    const r=st[id]; r.ev.sort((a,b)=>a.at-b.at); let run=0;
+    r.ev.forEach(e=>{if(e.w){run++; if(run>r.BS) r.BS=run;} else run=0;});
+  });
   return st;
 }
 const winPct=s=>s&&s.P?Math.round(100*s.W/s.P):0;
 
 /* ---------- Cups, draws and the score sheet ---------- */
 function cupsOf(t){return Math.max(1,Math.round(+((t.opts||{}).cups))||6);}
-function drawOK(t,id){const m=t.matches.find(x=>x.id===id); return !!m&&m.bk==="R"&&!!(t.opts.draws||t.opts.timer);}
+function bestOf(t){const b=Math.round(+((t.opts||{}).bestOf)); return (b===3||b===5)?b:1;}
+function drawOK(t,id){const m=t.matches.find(x=>x.id===id); return !!m&&m.bk==="R"&&bestOf(t)===1&&!!(t.opts.draws||t.opts.timer);}
+/* A game is "in game" once its timer or clock is started. Other games with one of those teams are unavailable. */
+function liveGames(t,E){const r={}; Object.keys(TM).forEach(id=>{const x=TM[id]; if(x&&x.started&&E.M[id]&&E.status(id)==="ready") r[id]=true;}); return r;}
+function gameState(t,E,id){
+  if(E.status(id)!=="ready") return null;
+  const live=liveGames(t,E); if(live[id]) return "ingame";
+  const s=E.sides(id);
+  for(const k in live){const o=E.sides(k); if(o[0]===s[0]||o[0]===s[1]||o[1]===s[0]||o[1]===s[1]) return "unavail";}
+  return null;
+}
+function gRank(t,E,id){const g=gameState(t,E,id); return g==="ingame"?0:g==="unavail"?2:1;}
+function serGames(t,id){const sr=t.series&&t.series[id]; return sr?sr.g:[];}
+function serFoot(t,E,m,st){
+  const bo=bestOf(t); if(bo<2) return "";
+  const o=E.outcome(m.id);
+  if(o&&o.r&&o.r.games) return "Best of "+bo+" · "+o.r.games.map(g=>(g.sa||0)+"–"+(g.sb||0)).join(", ");
+  if(st==="ready") return "Best of "+bo+" · game "+(serGames(t,m.id).length+1);
+  return "Best of "+bo;
+}
+function seriesList(t,s,g){
+  return `<div class="places">${g.map((q,i)=>`<div class="place" style="grid-template-columns:64px minmax(0,1fr) auto"><span class="hint">Game ${i+1}</span><span class="nm"><b>${esc(tName(t,q.w))}</b></span><span class="lives num">${q.sa!==""?q.sa:"?"}–${q.sb!==""?q.sb:"?"}</span></div>`).join("")}</div>`;
+}
+function pickLabel(t,id){
+  const tm=teamById(t,id); if(!tm) return `<b class="pn">${esc(tName(t,id))}</b>`;
+  const nm=(tm.name||"").trim(), ln=[pn(tm,"p1"),pn(tm,"p2")].filter(Boolean);
+  if(nm) return `<b class="pn">${esc(nm)}</b>${ln.length?`<small>${esc(ln.join(" & "))}</small>`:""}`;
+  if(ln.length) return ln.map(x=>`<b class="pl1">${esc(x)}</b>`).join("");
+  return `<b class="pn">${esc(tName(t,id))}</b>`;
+}
+function undoGame(){
+  const t=S.t, id=ui.sheet; if(!t||!id) return;
+  const s=engine(t).sides(id); let g=null; const r=t.results[id];
+  if(r&&r.games){g=r.games.slice(); delete t.results[id];}
+  else if(t.series&&t.series[id]) g=t.series[id].g.slice();
+  if(!g) return; g.pop();
+  if(g.length) t.series[id]={a:s[0],b:s[1],g:g}; else delete t.series[id];
+  prune(t); persist(true); render(); openSheet(id); toast("Last game removed");
+}
 function applyWin(){
   const t=S.t,d=ui.draft,s=engine(t).sides(ui.sheet),c=cupsOf(t);
   if(d.w==="draw"){if(!d.t0) d.s0=""; if(!d.t1) d.s1=""; return;}
@@ -782,12 +862,15 @@ function openSheet(id){
   setTimeout(()=>{const b=document.querySelector(".pickbtn");b&&b.focus();},30);
 }
 function closeSheet(silent){ui.sheet=null;ui.draft=null;ui.ps=null;ui.pd=null;ui.pdel=false;ui.perr="";document.body.style.overflow=DR?"hidden":"";if(!silent) renderSheet();}
-function timerBlock(t,id){
-  const x=tmGet(id), left=tmLeft(x), up=!!x.fired&&left<=0;
-  return `<div class="tmr ${up?"up":""}"><div class="tmr-h"><span class="tmr-lab">Game timer</span><span class="tmr-t num" data-timer="${esc(id)}">${fmtT(left)}</span></div>
-    <div class="tmr-ctl"><div class="stepper"><button class="step" data-act="tmadj:-1" aria-label="One minute less" ${x.mins<=1?"disabled":""}>−</button><span class="rcount num">${x.mins}<small> min</small></span><button class="step" data-act="tmadj:1" aria-label="One minute more" ${x.mins>=60?"disabled":""}>+</button></div>
-    <div class="row-btns">${x.running?`<button class="btn" data-act="tmpause">Pause</button>`:`<button class="btn primary" data-act="tmstart">${x.started&&left>0?"Resume":"Start"}</button>`}<button class="btn" data-act="tmreset">Reset</button></div></div>
-    ${up?`<div class="tup"><span><b>Time's up.</b> ${esc(timeRuleText(t,id))} Enter the cups, then call it.</span><button class="btn sm primary" data-act="callit">Call it</button></div>`:""}</div>`;
+function timerBlock(t,E,id){
+  const x=tmGet(id), up=x.mode==="up", low=tmLow(x), blocked=gameState(t,E,id)==="unavail";
+  const out=!up&&!!x.fired&&tmLeft(x)<=0;
+  return `<div class="tmr ${low?"low":""}" data-tmbox="${esc(id)}"><div class="tmr-h"><span class="tmr-lab">${up?"Game Clock":"Game Timer"}</span><span class="tmr-t num" data-timer="${esc(id)}">${tmDisp(x)}</span></div>
+    <div class="tmr-ctl">${up?`<span class="tmr-note">Counts up from when you start.</span>`:`<div class="stepper"><button class="step" data-act="tmadj:-1" aria-label="One minute less" ${x.mins<=1?"disabled":""}>−</button><span class="rcount num">${x.mins}<small> min</small></span><button class="step" data-act="tmadj:1" aria-label="One minute more" ${x.mins>=60?"disabled":""}>+</button></div>`}
+    <div class="row-btns">${x.running?`<button class="btn" data-act="tmpause">Pause</button>`:`<button class="btn primary" data-act="tmstart" ${blocked?"disabled":""}>${x.started?(out?"Restart":"Resume"):"Start game"}</button>`}${x.started?`<button class="btn" data-act="tmreset">Reset</button>`:""}</div></div>
+    ${blocked?`<p class="tmr-note">A team in this game is already playing another game.</p>`:""}
+    ${out?`<div class="tup"><span><b>Time's up.</b> ${esc(timeRuleText(t,id))} Enter the cups, then call it.</span><button class="btn sm primary" data-act="callit">Call it</button></div>`:""}
+    ${up?"":`<button class="link" data-act="snd">${muted()?"Sound is off. Turn on":"Sound is on. Turn off"}</button>`}</div>`;
 }
 function renderSheet(){
   const el=$("#sheet");
@@ -795,17 +878,33 @@ function renderSheet(){
   if(!ui.sheet||!S.t){el.hidden=true;el.innerHTML="";return;}
   const t=S.t, E=engine(t), id=ui.sheet, m=E.M[id], s=E.sides(id), d=ui.draft;
   if(!m||s[0]===undefined||s[1]===undefined||s[0]===BYE||s[1]===BYE){closeSheet();return;}
-  const ex=!!E.outcome(id), dk=drawOK(t,id), c=cupsOf(t);
+  const o=E.outcome(id), ex=!!o, bo=bestOf(t), dk=drawOK(t,id), c=cupsOf(t);
   el.hidden=false;
+  const head=`<p class="eyebrow">Game ${E.gno[id]} · ${esc(roundName(t,m))}</p>`;
+  if(ex&&bo>1&&o.r&&o.r.games){   // a finished series: show the games, allow undo
+    const wi=s[0]===o.w?0:1;
+    el.innerHTML=`<button class="scrim" data-act="cancel" aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">${head}
+      <h2 id="sh-t">${esc(tName(t,o.w))} won ${o.r.ws[wi]}–${o.r.ws[1-wi]}</h2>
+      ${seriesList(t,s,o.r.games)}
+      <div class="actions"><button class="btn primary" data-act="cancel">Done</button><button class="btn" data-act="undog">Undo last game</button></div>
+      <button class="link danger" data-act="clear">Clear this series</button></div>`;
+    return;
+  }
+  const x=TM[id], timerOut=!!(x&&x.mode!=="up"&&x.fired);
+  const showDraw=dk&&(!t.opts.timer||timerOut||d.w==="draw");
+  const gs=serGames(t,id), wa=gs.filter(q=>q.w===s[0]).length, wb=gs.filter(q=>q.w===s[1]).length;
+  const serbar=bo>1?`<div class="serbar"><span><b>Best of ${bo}</b> · first to ${(bo+1)/2} · game ${gs.length+1}</span><span class="serscore">${esc(tName(t,s[0]))} <b class="num">${wa}</b> – <b class="num">${wb}</b> ${esc(tName(t,s[1]))}</span>${gs.length?seriesList(t,s,gs)+`<button class="link" data-act="undog">Undo last game</button>`:""}</div>`:"";
   el.innerHTML=`<button class="scrim" data-act="cancel" aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">
-    <p class="eyebrow">Game ${E.gno[id]} · ${esc(roundName(t,m))}</p>
-    <h2 id="sh-t">${dk?"Who won, or was it a draw?":"Who won?"}</h2>
-    <div class="pick">${s.map((x,i)=>`<button class="pickbtn ${d.w===x?"on":""}" data-pw="${esc(x)}" data-act="w:${i}" aria-pressed="${d.w===x}"><span class="wl">${d.w===x?"Winner":""}</span><b>${esc(tName(t,x))}</b>${tSub(t,x)?`<small>${esc(tSub(t,x))}</small>`:""}</button>`).join("")}${dk?`<button class="pickbtn draw ${d.w==="draw"?"on":""}" data-pw="draw" data-act="w:draw" aria-pressed="${d.w==="draw"}"><span class="wl">${d.w==="draw"?"Draw":""}</span><b>Draw</b></button>`:""}</div>
-    ${t.opts.timer&&!ex?timerBlock(t,id):""}
-    <h3>Cups sunk <small>winner starts at ${c}</small></h3>
-    <div>${s.map((x,i)=>`<div class="srow"><span class="snm">${esc(tName(t,x))}</span><button class="step" data-act="inc:${i}:-1" aria-label="Minus one">−</button><input type="text" id="sc-${i}" inputmode="numeric" pattern="[0-9]*" data-score="${i}" value="${esc(d["s"+i])}" aria-label="${esc(tName(t,x))} cups" autocomplete="off"><button class="step" data-act="inc:${i}:1" aria-label="Plus one">+</button></div>`).join("")}</div>
+    ${head}
+    ${serbar}
+    ${ex?"":timerBlock(t,E,id)}
+    <h2 id="sh-t">Result?</h2>
+    <div class="pick">${s.map((q,i)=>`<button class="pickbtn ${d.w===q?"on":""}" data-pw="${esc(q)}" data-act="w:${i}" aria-pressed="${d.w===q}"><span class="wl">${d.w===q?"Winner":""}</span>${pickLabel(t,q)}</button>`).join("")}</div>
+    ${showDraw?`<div class="drawrow"><button class="drawbtn ${d.w==="draw"?"on":""}" data-pw="draw" data-act="w:draw" aria-pressed="${d.w==="draw"}">Draw</button></div>`:""}
+    <h3>Cups Sunk <small>winner starts at ${c}</small></h3>
+    <div>${s.map((q,i)=>`<div class="srow"><span class="snm">${esc(tName(t,q))}</span><button class="step" data-act="inc:${i}:-1" aria-label="Minus one">−</button><input type="text" id="sc-${i}" inputmode="numeric" pattern="[0-9]*" data-score="${i}" value="${esc(d["s"+i])}" aria-label="${esc(tName(t,q))} cups" autocomplete="off"><button class="step" data-act="inc:${i}:1" aria-label="Plus one">+</button></div>`).join("")}</div>
     <p class="warn" id="sh-warn"></p>
-    <div class="actions"><button class="btn primary" data-act="save" id="sh-save" ${d.w?"":"disabled"}>Save result</button><button class="btn" data-act="cancel">Cancel</button></div>
+    <div class="actions"><button class="btn primary" data-act="save" id="sh-save" ${d.w?"":"disabled"}>${bo>1?"Save game":"Save result"}</button><button class="btn" data-act="cancel">Cancel</button></div>
     ${ex?`<button class="link danger" data-act="clear">Clear this result</button>`:""}
   </div>`;
   updWarn();
@@ -836,34 +935,69 @@ function saveResult(){
   const t=S.t, E=engine(t), id=ui.sheet, s=E.sides(id), d=ui.draft; if(!d||!d.w) return;
   const isD=d.w==="draw"; if(isD&&!drawOK(t,id)) return;
   const clean=v=>{v=String(v==null?"":v).trim(); return v===""||isNaN(+v)?"":String(Math.max(0,Math.round(+v)));};
+  const bo=bestOf(t);
+  if(bo>1){   // best-of series: save this game, finish the match once someone has enough wins
+    let sr=t.series[id]; if(!sr||sr.a!==s[0]||sr.b!==s[1]) sr=t.series[id]={a:s[0],b:s[1],g:[]};
+    sr.g.push({sa:clean(d.s0),sb:clean(d.s1),w:d.w});
+    const wa=sr.g.filter(q=>q.w===s[0]).length, wb=sr.g.filter(q=>q.w===s[1]).length, need=(bo+1)/2;
+    delete TM[id]; tmSave();
+    if(wa>=need||wb>=need){
+      const all=sr.g.every(q=>q.sa!==""&&q.sb!==""), ca=all?sr.g.reduce((n,q)=>n+(+q.sa),0):"", cb=all?sr.g.reduce((n,q)=>n+(+q.sb),0):"";
+      t.results[id]={a:s[0],b:s[1],w:wa>wb?s[0]:s[1],draw:false,sa:String(ca),sb:String(cb),games:sr.g.slice(),ws:[wa,wb],at:Date.now()};
+      delete t.series[id]; prune(t); closeSheet(true); persist(true); render(); toast("Match won "+Math.max(wa,wb)+"–"+Math.min(wa,wb));
+    } else {persist(true); closeSheet(true); render(); openSheet(id); toast("Game saved. "+wa+"–"+wb);}
+    return;
+  }
   const prev=t.results[id], w=isD?s[0]:d.w;
   t.results[id]={a:s[0],b:s[1],w:w,draw:isD,sa:clean(d.s0),sb:clean(d.s1),at:prev&&prev.w===w&&!!prev.draw===isD?prev.at:Date.now()};
   delete TM[id]; tmSave();
   prune(t); closeSheet(true); persist(true); render(); toast(isD?"Draw saved":"Result saved");
 }
 
-/* ---------- Game timer ---------- */
+/* ---------- Game timer (counts down) and game clock (counts up) ---------- */
 let TM={}; try{TM=JSON.parse(lsGet(LS+":tm"))||{};}catch(e){TM={};}
 const tmSave=()=>lsSet(LS+":tm",JSON.stringify(TM));
 function tmGet(id){
-  if(!TM[id]){const m=Math.max(1,Math.min(60,Math.round(+((S.t&&S.t.opts&&S.t.opts.timerMins)||10))||10)); TM[id]={mins:m,left:m*60000,running:false,end:0,fired:false,started:false};}
+  if(!TM[id]){
+    if(S.t&&S.t.opts&&S.t.opts.timer){const m=Math.max(1,Math.min(60,Math.round(+(S.t.opts.timerMins||10))||10)); TM[id]={mode:"down",mins:m,left:m*60000,running:false,end:0,fired:false,started:false,warned:false};}
+    else TM[id]={mode:"up",el:0,st:0,running:false,started:false};
+  }
   return TM[id];
 }
 const tmLeft=x=>x.running?Math.max(0,x.end-Date.now()):x.left;
+const tmElapsed=x=>x.el+(x.running?Date.now()-x.st:0);
 function fmtT(ms){const s=Math.ceil(ms/1000),m=Math.floor(s/60);return m+":"+String(s%60).padStart(2,"0");}
-function tmStart(id){const x=tmGet(id); unlockAudio(); if(tmLeft(x)<=0) x.left=x.mins*60000; x.running=true; x.end=Date.now()+x.left; x.fired=false; x.started=true; tmSave();}
-function tmPause(id){const x=tmGet(id); x.left=tmLeft(x); x.running=false; tmSave();}
-function tmReset(id){const x=tmGet(id); x.left=x.mins*60000; x.running=false; x.fired=false; x.started=false; tmSave();}
+const tmDisp=x=>x.mode==="up"?fmtT(Math.floor(tmElapsed(x)/1000)*1000):fmtT(tmLeft(x));
+const tmLow=x=>x.mode!=="up"&&!!(x.fired||(x.started&&tmLeft(x)<=60000));
+function tmStart(id){
+  const x=tmGet(id); unlockAudio();
+  if(x.mode==="up"){x.running=true; x.st=Date.now(); x.started=true;}
+  else{if(tmLeft(x)<=0) x.left=x.mins*60000; x.running=true; x.end=Date.now()+x.left; x.fired=false; x.started=true; x.warned=x.left<=60000;}
+  tmSave();
+}
+function tmPause(id){const x=tmGet(id); if(x.mode==="up") x.el=tmElapsed(x); else x.left=tmLeft(x); x.running=false; tmSave();}
+function tmReset(id){const x=tmGet(id); if(x.mode==="up") x.el=0; else {x.left=x.mins*60000; x.fired=false; x.warned=false;} x.running=false; x.started=false; tmSave();}
 function tmAdj(id,d){
-  const x=tmGet(id), nm=Math.max(1,Math.min(60,x.mins+d)), delta=(nm-x.mins)*60000; x.mins=nm;
+  const x=tmGet(id); if(x.mode==="up") return;
+  const nm=Math.max(1,Math.min(60,x.mins+d)), delta=(nm-x.mins)*60000; x.mins=nm;
   if(x.running) x.end=Math.max(Date.now(),x.end+delta); else x.left=Math.max(0,x.left+delta);
-  if(x.fired&&tmLeft(x)>0) x.fired=false; tmSave();
+  if(x.fired&&tmLeft(x)>0) x.fired=false;
+  if(x.started) x.warned=tmLeft(x)<=60000;
+  tmSave();
 }
 function tick(){
-  const now=Date.now(); let fired=null;
-  Object.keys(TM).forEach(id=>{const x=TM[id]; if(x.running&&x.end<=now){x.running=false;x.left=0;x.fired=true;fired=id;}});
-  document.querySelectorAll("[data-timer]").forEach(el=>{const x=TM[el.dataset.timer]; if(x) el.textContent=fmtT(tmLeft(x));});
-  if(fired){tmSave(); alarm(); toast("Time's up!"); render();}
+  const now=Date.now(); let fired=null, warn=null;
+  Object.keys(TM).forEach(id=>{const x=TM[id]; if(!x||x.mode==="up"||!x.running) return;
+    const left=x.end-now;
+    if(left<=0){x.running=false; x.left=0; x.fired=true; fired=id;}
+    else if(!x.warned&&left<=60000){x.warned=true; warn=id;}});
+  document.querySelectorAll("[data-timer]").forEach(el=>{
+    const x=TM[el.dataset.timer]; if(!x) return;
+    el.textContent=tmDisp(x);
+    const box=el.closest("[data-tmbox]"); if(box) box.classList.toggle("low",tmLow(x));
+  });
+  if(warn){tmSave(); warnBeep(); toast("1 minute left");}
+  if(fired){tmSave(); siren(); toast("Time's up!"); render();}
 }
 
 /* ---------- Sound and buzz (only after a tap, as phones require) ---------- */
@@ -876,14 +1010,25 @@ function tone(f,d,v,when){
     const t0=AC.currentTime+(when||0); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(v||0.2,t0+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t0+d); o.start(t0); o.stop(t0+d+0.03);}catch(e){}
 }
 function buzz(p){try{if(navigator.vibrate&&!muted()) navigator.vibrate(p);}catch(e){}}
-function alarm(){tone(880,.28,.3,0);tone(880,.28,.3,.38);tone(1175,.5,.3,.76);buzz([300,150,300,150,500]);}
+function warnBeep(){tone(1046,.12,.3,0);tone(1046,.12,.3,.22);tone(1046,.12,.3,.44);tone(1318,.4,.3,.68);buzz([120,80,120,80,120,80,300]);}
+function siren(){
+  if(!muted()&&AC){
+    try{
+      const o=AC.createOscillator(), g=AC.createGain(); o.type="sawtooth"; o.connect(g); g.connect(AC.destination);
+      const t0=AC.currentTime; g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(0.2,t0+0.05);
+      for(let i=0;i<3;i++){o.frequency.setValueAtTime(650,t0+i); o.frequency.linearRampToValueAtTime(1250,t0+i+0.5); o.frequency.linearRampToValueAtTime(650,t0+i+1);}
+      g.gain.setValueAtTime(0.2,t0+2.85); g.gain.exponentialRampToValueAtTime(0.0001,t0+3.2); o.start(t0); o.stop(t0+3.3);
+    }catch(e){}
+  }
+  buzz([500,150,500,150,900]);
+}
 
 /* ---------- Live draw ---------- */
 let DR=null;
 const reduced=()=>!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 function pickedValid(){const su=S.setup; su.picked=(su.picked||[]).filter(id=>rosterP(id)); return su.picked;}
 function drawOpen(){
-  const ids=pickedValid(); if(ids.length<6||Math.floor(ids.length/2)>8) return;
+  const ids=pickedValid(); if(ids.length<4||Math.floor(ids.length/2)>8) return;
   unlockAudio();
   DR={seq:shuffle(ids),mode:S.setup.drawStyle==="tap"?"tap":"auto",rev:0,phase:"intro",tick:null,tm:null};
   document.body.style.overflow="hidden"; renderDraw();
@@ -922,12 +1067,12 @@ function renderDraw(){
   el.hidden=false;
   const D=DR, n=Math.floor(D.seq.length/2), odd=D.seq.length%2===1;
   const nm=id=>{const p=rosterP(id); return p?pdisp(p):"?";};
-  const top=`<div class="dw-top"><b>Live draw</b><button class="ic" data-act="dclose" aria-label="Close the draw">${ICONS.x}</button></div>`;
+  const top=`<div class="dw-top"><b>Live Draw</b><button class="ic" data-act="dclose" aria-label="Close the draw">${ICONS.x}</button></div>`;
   let body="";
   if(D.phase==="intro"){
     body=`<h1 class="dw-h">${D.seq.length} players, ${n} teams</h1>
       <p class="hint">Players are drawn one at a time. Every two in a row become a team.${odd?" With an odd number, the last player drawn sits out as a sub.":""}</p>
-      <div class="seg" role="group" aria-label="Draw style">${[["auto","Auto"],["tap","Tap to reveal"]].map(([k,l])=>`<button data-act="dmode:${k}" aria-pressed="${D.mode===k}">${l}</button>`).join("")}</div>
+      <div class="seg" role="group" aria-label="Draw style">${[["auto","Auto"],["tap","Tap to Reveal"]].map(([k,l])=>`<button data-act="dmode:${k}" aria-pressed="${D.mode===k}">${l}</button>`).join("")}</div>
       <p class="hint">${D.mode==="auto"?"Auto plays the whole draw by itself.":"You tap for each player, so you set the pace."}</p>
       <button class="btn primary big" data-act="dgo">Start draw</button>
       <button class="link" data-act="snd">${muted()?"Sound is off. Turn on":"Sound is on. Turn off"}</button>`;
@@ -942,7 +1087,7 @@ function renderDraw(){
     const spin=D.phase==="spin", landed=D.phase==="landed";
     const idx=spin?D.rev:D.rev-1;               // which player is on stage
     const tIdx=Math.floor(Math.max(0,idx)/2), isSub=odd&&Math.max(0,idx)===D.seq.length-1;
-    const label=isSub?"Sitting out as sub":`Team ${tIdx+1} · player ${(Math.max(0,idx)%2)+1}`;
+    const label=isSub?"Sitting out as sub":`Team ${tIdx+1} · Player ${(Math.max(0,idx)%2)+1}`;
     let stage;
     if(spin) stage=`<span class="lab">${label}</span><div class="dw-big" aria-live="off"><span id="dw-tick">…</span></div>`;
     else if(landed) stage=`<span class="lab">${label}</span><div class="dw-big pop">${esc(nm(D.seq[D.rev-1]))}</div>`;
@@ -960,7 +1105,7 @@ function renderDraw(){
       :`<p class="hint" role="status">${spin?"Drawing…":landed&&!more?"All drawn":"Next player coming up"}</p>`;
     body=`<div class="dw-stage">${stage}</div>${ctl}
       <div class="dw-teams">${teams.join("")}</div>
-      ${pot.length?`<section><h3 class="rd">Still in the pot</h3><div class="dw-pot ${spin?"pot-on":""}">${pot.map(id=>`<span class="pp">${esc(nm(id))}</span>`).join("")}</div></section>`:""}
+      ${pot.length?`<section><h3 class="rd">Still in the Pot</h3><div class="dw-pot ${spin?"pot-on":""}">${pot.map(id=>`<span class="pp">${esc(nm(id))}</span>`).join("")}</div></section>`:""}
       <button class="link" data-act="dskip">Skip to the end</button>`;
   }
   el.innerHTML=top+`<div class="dw-in">${body}</div>`;
@@ -999,11 +1144,15 @@ function renderPSheet(el){
     if(!P&&!(s&&s.Ti)) stats=`<p class="hint">No games yet. Stats appear once this player's team plays.</p>`;
     else {
       const rec=s.D?`${s.W}–${s.D}–${s.L}`:`${s.W}–${s.L}`;
+      const cpg=s.CG?s.CF/s.CG:null, dpg=s.CG?(s.CF-s.CA)/s.CG:null;
       stats=`<div class="tiles">
         <div class="tile"><b class="num">${P}</b><span>Games</span></div>
         <div class="tile"><b class="num">${rec}</b><span>${s.D?"W–D–L":"W–L"}</span></div>
-        <div class="tile"><b class="num">${winPct(s)}%</b><span>Win rate</span></div>
-        <div class="tile"><b class="num">${s.CG?s.CF+"–"+s.CA:"–"}</b><span>Cups for–against</span></div>
+        <div class="tile"><b class="num">${winPct(s)}%</b><span>Win Rate</span></div>
+        <div class="tile"><b class="num">${cpg==null?"–":cpg.toFixed(1)}</b><span>Avg Cups / Game</span></div>
+        <div class="tile"><b class="num">${dpg==null?"–":(dpg>0?"+":"")+dpg.toFixed(1)}</b><span>Avg Cup Diff / Game</span></div>
+        <div class="tile"><b class="num">${s.BS}</b><span>Best Win Streak</span></div>
+        <div class="tile"><b class="num">${s.CG?s.CF+"–"+s.CA:"–"}</b><span>Cups For–Against</span></div>
         <div class="tile"><b class="num">${s.Ti}</b><span>Tournaments</span></div>
         <div class="tile"><b class="num">${s.T}</b><span>Titles</span></div></div>`;
       const pts=Object.keys(s.partners).map(k=>({id:k,P:s.partners[k].P,W:s.partners[k].W})).filter(x=>rosterP(x.id)).sort((a,b)=>(b.P-a.P)||(b.W-a.W)).slice(0,3);
@@ -1023,6 +1172,7 @@ function renderPSheet(el){
   </div>`;
 }
 function viewPlayers(t,E){
+  if(ui.hv!=null&&S.history[ui.hv]) return viewHistory(ui.hv);
   const R=S.roster, ST=playerStats(); let h="";
   h+=`<section><div class="sec-h"><h2>Players</h2><button class="btn primary sm" data-act="ps:new">+ Add player</button></div>`;
   if(!R.length){
@@ -1034,18 +1184,28 @@ function viewPlayers(t,E){
       <p class="hint">Sorted by wins. Tap a player for their profile and stats.</p>`;
   }
   h+=`</section>`;
-  const H=(S.history||[]).slice().reverse();
-  if(H.length){
-    h+=`<section><div class="sec-h"><h2>Past tournaments</h2><span class="hint num">${H.length}</span></div><div class="res">${H.map(x=>{
-      let champ=""; try{const c=engine(x).placings().find(q=>q.pl===1); if(c) champ=tName(x,c.id);}catch(e){}
+  const HL=(S.history||[]).map((x,i)=>({x:x,i:i})).reverse();
+  if(HL.length){
+    h+=`<section><div class="sec-h"><h2>Past Tournaments</h2><span class="hint num">${HL.length}</span></div><div class="res">${HL.map(q=>{
+      const x=q.x; let champ=""; try{const c=engine(x).placings().find(z=>z.pl===1); if(c) champ=tName(x,c.id);}catch(e){}
       const when=x.created?new Date(x.created).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}):"";
-      return `<div class="resrow"><span style="min-width:0"><span class="meta">${esc(when)} · ${esc(FMT[x.format]||"")}</span><br><span class="line"><b>${esc(x.name||"Tournament")}</b>${champ?` · won by ${esc(champ)}`:""}</span></span></div>`;}).join("")}</div></section>`;
+      return `<button class="resrow" data-act="hv:${q.i}"><span style="min-width:0"><span class="meta">${esc(when)} · ${esc(FMT[x.format]||"")}</span><br><span class="line"><b>${esc(x.name||"Tournament")}</b> · ${champ?"won by "+esc(champ):"unfinished"}</span></span><span class="score" aria-hidden="true">›</span></button>`;}).join("")}</div><p class="hint">Tap a tournament to see its results and ladder.</p></section>`;
   }
   h+=`<section class="card"><div class="sec-h"><h2>Backup</h2></div><p class="hint">Everything is saved in this browser on this device. Download a backup to keep your players and stats safe, or to move them to another phone.</p>`;
   if(ui.impErr) h+=`<p class="err">${esc(ui.impErr)}</p>`;
   if(ui.imp) h+=`<div class="confirm"><p>Replace everything on this device with the backup? It has ${(ui.imp.roster||[]).length} players and ${(ui.imp.history||[]).length} past tournaments.</p><div class="row-btns"><button class="btn danger" data-act="impgo">Restore backup</button><button class="btn" data-act="impno">Cancel</button></div></div>`;
   else h+=`<div class="row-btns"><button class="btn" data-act="expo">Download backup</button><button class="btn" data-act="impick">Restore from backup</button></div>`;
   h+=`</section>`;
+  return h;
+}
+function viewHistory(i){
+  const x=S.history[i], E=engine(x);
+  const when=x.created?new Date(x.created).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}):"";
+  let h=`<section><button class="link" data-act="hvback">‹ Back to Players</button><div class="sec-h"><h2>${esc(x.name||"Tournament")}</h2></div><p class="hint">${esc(when)} · ${esc(FMT[x.format]||"")} · ${x.teams.length} teams</p></section>`;
+  h+=viewResults(x,E);
+  h+=`<section class="card"><div class="sec-h"><h2>Remove Tournament</h2></div>`+(ui.hdel
+    ?`<div class="confirm"><p>Remove this tournament? Its games are taken out of every player's stats.</p><div class="row-btns"><button class="btn danger" data-act="hdelgo">Remove</button><button class="btn" data-act="hdelno">Keep</button></div></div>`
+    :`<p class="hint">A removed tournament no longer counts towards player stats.</p><div><button class="btn danger" data-act="hdel">Remove this tournament</button></div>`)+`</section>`;
   return h;
 }
 function exportData(){
@@ -1057,12 +1217,12 @@ function exportData(){
 /* ---------- Setup: roster draw, pick teams, rules ---------- */
 function rosterDrawHTML(su){
   const R=S.roster;
-  if(R.length<6) return `<div class="empty"><h2>Add your players first</h2><p>The live draw needs at least 6 players in your list. ${R.length?"You have "+R.length+".":""}</p><button class="btn primary" data-act="tab:players">Go to Players</button>${R.length?"":`<button class="link" data-act="samples">Or try 10 sample players</button>`}</div>`;
-  const picked=pickedValid(), k=picked.length, n=Math.floor(k/2), ok=k>=6&&n<=8;
+  if(R.length<4) return `<div class="empty"><h2>Add your players first</h2><p>The live draw needs at least 4 players in your list. ${R.length?"You have "+R.length+".":""}</p><button class="btn primary" data-act="tab:players">Go to Players</button>${R.length?"":`<button class="link" data-act="samples">Or try 10 sample players</button>`}</div>`;
+  const picked=pickedValid(), k=picked.length, n=Math.floor(k/2), ok=k>=4&&n<=8;
   const rows=R.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(p=>{const on=picked.includes(p.id);
     return `<button class="resrow prow" data-act="tog:${p.id}" aria-pressed="${on}"><span class="av">${flag(p.nat)||esc(ini(p.name))}</span><span style="min-width:0"><b>${esc(p.name)}</b></span><span class="ck ${on?"on":""}">${on?"✓":""}</span></button>`;}).join("");
-  let msg=`${k} selected`; if(k>=2) msg+=`, ${n} team${n===1?"":"s"}`; if(k%2&&k>1) msg+=". One player sits out as a sub.";
-  let err=""; if(k>0&&k<6) err="Pick at least 6 players to make 3 teams."; else if(n>8) err="This app handles up to 8 teams, so 16 players. Untick a few.";
+  let msg=`${k} selected`; if(k>=2) msg+=`, ${n} team${n===1?"":"s"}`; if(k%2&&k>1) msg+=". One player sits out as a sub."; if(n===2) msg+=". Two teams play a head to head, so pick Single knockout next.";
+  let err=""; if(k>0&&k<4) err="Pick at least 4 players to make 2 teams."; else if(n>8) err="This app handles up to 8 teams, so 16 players. Untick a few.";
   return `<p class="hint">Tick everyone playing. Teams of two are drawn live on screen.</p>
     <div class="row-btns"><button class="btn sm" data-act="pall">Select all</button><button class="btn sm" data-act="pnone">Clear</button></div>
     <div class="res">${rows}</div>
@@ -1094,37 +1254,65 @@ function stp(key,val,min,max,suffix){
 }
 function rrow(title,desc,ctl){return `<div class="rr"><div style="min-width:0;flex:1 1 120px"><b>${title}</b>${desc?`<p class="hint">${desc}</p>`:""}</div>${ctl}</div>`;}
 function rulesHTML(su){
-  const rr=su.format==="rr";
-  let h=`<section class="card"><div class="step-h"><span class="step-n">${rr?3:4}</span><h2>Game rules</h2></div>`;
-  h+=rrow("Cups per game","The winner's score starts here. Go higher for overtime.",stp("cups",+su.cups||6,3,15));
-  h+=sw("timer","Game timer","Start a countdown on each game from the score sheet.");
+  const rr=su.format==="rr", bo=([3,5].indexOf(+su.bestOf)>=0)?+su.bestOf:1;
+  let h=`<section class="card"><div class="step-h"><span class="step-n">${rr?3:4}</span><h2>Game Rules</h2></div>`;
+  h+=`<div class="rr" style="flex-direction:column;align-items:stretch"><div><b>Match Length</b><p class="hint">${bo===1?"One game decides each match.":"Each match is a series, scored like sets in tennis. First to "+((bo+1)/2)+" games wins the match."}</p></div><div class="seg" role="group" aria-label="Match length">${[[1,"1 game"],[3,"Best of 3"],[5,"Best of 5"]].map(([k,l])=>`<button data-act="bo:${k}" aria-pressed="${bo===k}">${l}</button>`).join("")}</div></div>`;
+  h+=rrow("Cups Per Game","The winner's score starts here. Go higher for overtime.",stp("cups",+su.cups||6,3,15));
+  h+=sw("timer","Game Timer","Count down on each game, with a 1 minute warning and a siren. Off means a clock that counts up.");
   if(su.timer){
-    h+=rrow("Default game length","You can change it on each game.",stp("timerMins",+su.timerMins||10,1,60," min"));
-    h+=`<div class="opts">`+[["leader","Most cups wins","When time is up, the team ahead wins. Level means a draw in round robin, or sudden death in a knockout."],["draw","Unfinished games are a draw","Only a team that sinks every cup wins. Knockout games still need a winner."]].map(([k,l,d])=>`<button class="opt" data-act="tup:${k}" aria-pressed="${(su.timeUp||"leader")===k}"><span class="dot"></span><span class="ot">${l}</span><span class="od">${d}</span></button>`).join("")+`</div>`;
+    h+=rrow("Default Game Length","You can change it on each game.",stp("timerMins",+su.timerMins||10,1,60," min"));
+    if(bo===1) h+=`<div class="opts">`+[["leader","Most Cups Wins","When time is up, the team ahead wins. Level means a draw in round robin, or sudden death in a knockout."],["draw","Unfinished Games Are a Draw","Only a team that sinks every cup wins. Knockout games still need a winner."]].map(([k,l,d])=>`<button class="opt" data-act="tup:${k}" aria-pressed="${(su.timeUp||"leader")===k}"><span class="dot"></span><span class="ot">${l}</span><span class="od">${d}</span></button>`).join("")+`</div>`;
+    else h+=`<p class="hint">When time is up, the team ahead wins the game. If level, play sudden death.</p>`;
   }
   if(rr){
-    h+=su.timer?`<p class="hint">With the timer on, draws are allowed in round robin.</p>`:sw("draws","Allow draws","Round robin games can finish level.");
-    h+=sw("usePoints","Points table","Rank the ladder by points instead of just wins. Off by default.");
-    if(su.usePoints) h+=rrow("Points for a win","",stp("winPts",+su.winPts||3,1,10))+rrow("Points for a draw","",stp("drawPts",su.drawPts==null?1:+su.drawPts,0,5));
+    if(bo>1) h+=`<p class="hint">Draws are off in a best-of series. Every game needs a winner.</p>`;
+    else h+=su.timer?`<p class="hint">With the timer on, draws are allowed in round robin.</p>`:sw("draws","Allow Draws","Round robin games can finish level.");
+    h+=sw("usePoints","Points Table","Rank the ladder by points instead of just wins. Off by default.");
+    if(su.usePoints) h+=rrow("Points for a Win","",stp("winPts",+su.winPts||3,1,10))+(bo===1?rrow("Points for a Draw","",stp("drawPts",su.drawPts==null?1:+su.drawPts,0,5)):"");
   } else h+=`<p class="hint">Draws and a points table are for round robin. Knockout games always need a winner.</p>`;
   return h+`</section>`;
 }
 
+/* ---------- Round robin finals ---------- */
+const FIN={
+  none:{name:"No Finals",min:3,team:0,games:0,title:"",sub:"",short:"",desc:"The ladder decides it. 1st on the ladder wins."},
+  gf:{name:"Grand Final",min:2,team:2,games:1,title:"Grand Final",sub:"Top two on the ladder.",short:"the Grand Final between the top two",desc:"1st plays 2nd. One game decides the title."},
+  page:{name:"Page Playoff",min:4,team:4,games:4,title:"Finals",sub:"Page Playoff. Top four on the ladder.",short:"a Page Playoff for the top four",desc:"1st v 2nd: the winner goes straight to the final. 3rd v 4th: the loser is out. The 1st v 2nd loser plays the 3rd v 4th winner for the other final spot."},
+  top3:{name:"Top 3 Finals",min:3,team:3,games:2,title:"Finals",sub:"Top three on the ladder. 1st waits in the final.",short:"top three finals",desc:"1st goes straight to the final. 2nd plays 3rd and the loser is out. 4th and below are out."},
+  top5:{name:"Top 5 Finals",min:5,team:5,games:5,title:"Finals",sub:"Top five on the ladder. 1st gets a bye.",short:"top five finals",desc:"1st gets a bye. 2nd v 3rd and 4th v 5th (that loser is out). Then 2nd v 3rd winner plays 4th v 5th winner, and the 2nd v 3rd loser plays 1st. The winners play the final."}
+};
+function finalsMatches(type,n){
+  const mk=(id,rd,a,b,o)=>Object.assign({id:id,bk:"F",rd:rd,a:a,b:b,lp:null},o||{});
+  if(type==="gf") return [mk("F1",1,"r:1","r:2",{lp:2,nm:"Grand Final"})];
+  if(type==="page") return [mk("Q1",1,"r:1","r:2",{nm:"Qualifier 1",sc:true}),mk("EL",1,"r:3","r:4",{nm:"Eliminator",lp:4}),mk("Q2",2,"l:Q1","w:EL",{nm:"Qualifier 2",lp:3}),mk("F1",3,"w:Q1","w:Q2",{nm:"Grand Final",lp:2})];
+  if(type==="top3") return [mk("S1",1,"r:2","r:3",{nm:"Semi-Final",lp:3}),mk("F1",2,"r:1","w:S1",{nm:"Grand Final",lp:2})];
+  if(type==="top5") return [mk("S1",1,"r:2","r:3",{nm:"Round 1 · 2nd v 3rd",sc:true}),mk("S2",1,"r:4","r:5",{nm:"Round 1 · 4th v 5th",lp:5}),mk("S3",2,"w:S1","w:S2",{nm:"Round 2",lp:3}),mk("S4",2,"r:1","l:S1",{nm:"Round 2",lp:3}),mk("F1",3,"w:S3","w:S4",{nm:"Grand Final",lp:2})];
+  return [];
+}
+function finalsHTML(su,n){
+  const cur=FIN[su.finals]?su.finals:"gf";
+  let h=`<div class="rr" style="flex-direction:column;align-items:stretch"><div><b>Finals</b><p class="hint">What happens after the round robin.</p></div><div class="opts">`;
+  ["none","gf","page","top3","top5"].forEach(k=>{
+    const f=FIN[k], ok=k==="none"||n<3||n>=f.min, g=f.games?`${f.games} game${f.games>1?"s":""}`:"";
+    h+=`<button class="opt" data-act="fin:${k}" aria-pressed="${cur===k}" ${ok?"":"disabled"}><span class="dot"></span><span class="ot">${f.name}${k==="gf"?'<span class="tag">Default</span>':""}${ok?"":`<span class="tag" style="background:var(--surface);color:var(--muted)">${f.min}+ teams</span>`}</span><span class="od">${f.desc}</span>${g?`<span class="og num">${g}</span>`:""}</button>`;
+  });
+  return h+`</div></div>`;
+}
 
 /* ---------- Setup ---------- */
 function rrCur(){const v=Math.round(+S.setup.rrCycles); return v>=1?Math.min(4,v):1;}
 function rrLive(t){const v=Math.round(+((t.opts||{}).rrCycles)); return v>=1?Math.min(4,v):1;}
 function times(c){return c===1?"once":c===2?"twice":c+" times";}
-function rrSub(t){const c=rrLive(t); return `${c} round${c===1?"":"s"} (everyone plays everyone ${times(c)})${t.opts.rrFinal?", then the grand final between the top two":""}. The ladder is on the Results tab.`;}
+function rrSub(t){const c=rrLive(t); return `${c} round${c===1?"":"s"} (everyone plays everyone ${times(c)})${(()=>{const fk=t.opts.finals||(t.opts.rrFinal?"gf":"none"); return FIN[fk]&&fk!=="none"?", then "+FIN[fk].short:"";})()}. The ladder is on the Results tab.`;}
 function stepperHTML(a,cur){return `<div class="stepper"><button class="step" data-act="${a}:-1" aria-label="Fewer rounds" ${cur<=1?"disabled":""}>−</button><span class="rcount num" aria-live="polite">${cur}</span><button class="step" data-act="${a}:1" aria-label="More rounds" ${cur>=4?"disabled":""}>+</button></div>`;}
 function rrRoundsHTML(n){
   const cur=rrCur(), per=Math.max(0,n-1)*cur;
   const hint=`A round is everyone playing everyone once. Each team plays every other team ${times(cur)}, ${per} game${per===1?"":"s"} each.`;
-  return `<div class="rr"><div style="min-width:0;flex:1 1 200px"><b>Rounds before the grand final</b><p class="hint">${hint}</p></div>${stepperHTML("rr",cur)}</div>`;
+  return `<div class="rr"><div style="min-width:0;flex:1 1 200px"><b>Rounds Before the Finals</b><p class="hint">${hint}</p></div>${stepperHTML("rr",cur)}</div>`;
 }
 function rrLiveHTML(t){
   const n=t.teams.length, cur=rrLive(t), has=Object.keys(t.results).length>0;
-  return `<div class="banner rrlive"><div style="min-width:0;flex:1 1 180px"><b>Rounds before the grand final</b><br><span>Everyone plays everyone ${times(cur)}.${has?" Lowering it removes results from the dropped rounds.":""}</span></div>${stepperHTML("lr",cur)}</div>`;
+  return `<div class="banner rrlive"><div style="min-width:0;flex:1 1 180px"><b>Rounds Before the Finals</b><br><span>Everyone plays everyone ${times(cur)}.${has?" Lowering it removes results from the dropped rounds.":""}</span></div>${stepperHTML("lr",cur)}</div>`;
 }
 function rrDrawHTML(t,E,ms){
   let h="";
@@ -1135,19 +1323,19 @@ function rrDrawHTML(t,E,ms){
       const rm=cm.filter(m=>(m.md||m.rd)===md);
       const inR=new Set(); rm.forEach(m=>E.sides(m.id).forEach(x=>inR.add(x)));
       const out=t.slots.filter(x=>x&&!inR.has(x));
-      h+=`<p class="hint md">Match day ${md}${out.length?" · Sitting out: "+out.map(x=>esc(tName(t,x))).join(", "):""}</p><div class="grid">${rm.map(m=>card(t,E,m,false)).join("")}</div>`;
+      h+=`<p class="hint md">Match Day ${md}${out.length?" · Sitting out: "+out.map(x=>esc(tName(t,x))).join(", "):""}</p><div class="grid">${rm.map(m=>card(t,E,m,false)).join("")}</div>`;
     });
   });
   return h;
 }
-function suggested(n){return n<=3?"rr":n<=6?"double":"single";}
+function suggested(n){return n===2?"single":n<=3?"rr":n<=6?"double":"single";}
 function countGames(f,n,o){
-  if(n<3||n>8) return null;
+  if(n<(f==="single"?2:3)||n>8) return null;
   const t={format:f,teams:[],slots:Array.from({length:slotsFor(f,n)},(_,i)=>i<n?"x"+i:null),matches:buildMatches(f,n,Object.assign({},o,{reset:false})),results:{},opts:{}};
   const E=engine(t); return t.matches.filter(m=>E.status(m.id)!=="bye").length;
 }
 function byeSlots(f,n){
-  if(f==="rr"||n<3||n>8) return [];
+  if(f==="rr"||n<(f==="single"?2:3)||n>8) return [];
   const t={format:f,teams:[],slots:Array.from({length:slotsFor(f,n)},(_,i)=>i<n?"x"+i:null),matches:buildMatches(f,n,{}),results:{},opts:{}};
   const E=engine(t); return byeTeams(t,E).map(x=>+x.slice(1)+1);
 }
@@ -1160,7 +1348,7 @@ function viewSetup(t,E){
   // Step 1
   const md=su.mode==="pick"||su.mode==="type"?su.mode:"roster";
   h+=`<section class="card"><div class="step-h"><span class="step-n">1</span><h2>Teams</h2></div>
-    <div class="seg" role="group" aria-label="How to make teams">${[["roster","Live draw"],["pick","Pick teams"],["type","Type names"]].map(([k,l])=>`<button data-act="mode:${k}" aria-pressed="${md===k}">${l}</button>`).join("")}</div>`;
+    <div class="seg" role="group" aria-label="How to make teams">${[["roster","Live Draw"],["pick","Pick Teams"],["type","Type Names"]].map(([k,l])=>`<button data-act="mode:${k}" aria-pressed="${md===k}">${l}</button>`).join("")}</div>`;
   if(md==="roster") h+=rosterDrawHTML(su);
   else if(md==="pick") h+=pickHTML(su);
   else h+=`<p class="hint">For guests who aren't in your players list. ${su.seeding==="random"?"Order doesn't matter for a random draw.":"List order is the seeding. Team 1 is the top seed."}</p>`+teamsEditor(su,"type")+`<button class="btn" data-act="addteam" ${su.teams.length>=8?"disabled":""}>+ Add team</button>`;
@@ -1172,21 +1360,21 @@ function setupB(){
   // Step 2
   const sg=suggested(n);
   h+=`<section class="card"><div class="step-h"><span class="step-n">2</span><h2>Format</h2></div><div class="opts">`;
-  [["double","Double knockout","Out after two losses. Every team plays at least twice."],["single","Single knockout","Tennis style. Lose once and you're out. Quickest."],["rr","Round robin","Everyone plays everyone. The ladder decides it."]].forEach(([k,l,d])=>{
-    const c=countGames(k,n,{third:su.third,rrFinal:su.rrFinal,rrCycles:rrCur()});
+  [["double","Double Knockout","Out after two losses. Every team plays at least twice."],["single","Single Knockout","Tennis style. Lose once and you're out. Quickest."],["rr","Round Robin","Everyone plays everyone. The ladder decides it."]].forEach(([k,l,d])=>{
+    const c=countGames(k,n,{third:su.third,finals:su.finals||"gf",rrCycles:rrCur()});
     let g=c==null?"":`${c} games`;
-    if(k==="double"&&c!=null&&su.reset) g=`${c} games, or ${c+1} if the grand final resets`;
-    h+=`<button class="opt" data-act="fmt:${k}" aria-pressed="${su.format===k}"><span class="dot"></span><span class="ot">${l}${n>=3&&n<=8&&sg===k?'<span class="tag">Suggested</span>':""}</span><span class="od">${d}</span>${g?`<span class="og num">${g} with ${n} teams</span>`:""}</button>`;
+    if(k==="double"&&c!=null&&su.reset) g=`${c} games, or ${c+1} if the Grand Final Resets`;
+    h+=`<button class="opt" data-act="fmt:${k}" aria-pressed="${su.format===k}"><span class="dot"></span><span class="ot">${l}${n>=2&&n<=8&&sg===k?'<span class="tag">Suggested</span>':""}</span><span class="od">${d}</span>${g?`<span class="og num">${g} with ${n} teams</span>`:""}</button>`;
   });
   h+=`</div>`;
-  if(su.format==="double") h+=sw("reset","Grand final reset","If the losers-bracket team wins the grand final, play one more game so the champion is decided by two losses.");
-  if(su.format==="single") h+=sw("third","3rd place playoff","Semi-final losers play off for 3rd.");
-  if(su.format==="rr") h+=sw("rrFinal","Grand final between the top two","After the rounds, 1st and 2nd on the ladder play a grand final.")+rrRoundsHTML(n);
+  if(su.format==="double") h+=sw("reset","Grand Final Reset","If the losers-bracket team wins the Grand Final, play one more game so the champion is decided by two losses.");
+  if(su.format==="single") h+=sw("third","3rd Place Playoff","Semi-final losers play off for 3rd.");
+  if(su.format==="rr") h+=finalsHTML(su,n)+rrRoundsHTML(n);
   h+=`</section>`;
   // Step 3
   if(su.format!=="rr"){
     h+=`<section class="card"><div class="step-h"><span class="step-n">3</span><h2>Draw</h2></div><div class="opts">`;
-    [["random","Random draw","No seeds. Teams are shuffled when you create the draw."],["seeded","Seeded","Team 1 in your list is the top seed. Top seeds get the byes."],["reverse","Reverse seeded","Team 1 is still the top seed, but the lowest seeds get the byes, so the best teams play the extra game."]].forEach(([k,l,d])=>{
+    [["random","Random Draw","No seeds. Teams are shuffled when you create the draw."],["seeded","Seeded","Team 1 in your list is the top seed. Top seeds get the byes."],["reverse","Reverse Seeded","Team 1 is still the top seed, but the lowest seeds get the byes, so the best teams play the extra game."]].forEach(([k,l,d])=>{
       h+=`<button class="opt" data-act="seed:${k}" aria-pressed="${su.seeding===k}"><span class="dot"></span><span class="ot">${l}</span><span class="od">${d}</span></button>`;});
     h+=`</div>`;
     const bs=byeSlots(su.format,n);
@@ -1197,11 +1385,13 @@ function setupB(){
       else {const seeds=bs.map(s=>su.seeding==="reverse"?n+1-s:s).sort((a,b)=>a-b);
         txt=`Byes into round 2: ${seeds.map(sd=>esc(displayName(rt[sd-1],sd-1))+" (#"+sd+")").join(", ")}.`;}
       h+=`<p class="note">${txt}</p>`;
-    } else if(n>=3&&n<=8) h+=`<p class="note">No byes with ${n} teams. Everyone plays in round 1.</p>`;
+    } else if(n>=2&&n<=8) h+=`<p class="note">No byes with ${n} teams. Everyone plays in round 1.</p>`;
     h+=`</section>`;
   }
   h+=rulesHTML(su);
-  const errMsg=n<3?"Add at least 3 teams to make a draw.":n>8?"This app handles up to 8 teams.":"";
+  const fmin=su.format==="single"?2:3;
+  let errMsg=n<fmin?(n===2?"Double knockout and round robin need 3 or more teams. Pick single knockout for a head to head.":"Add at least "+fmin+" teams to make a draw."):n>8?"This app handles up to 8 teams.":"";
+  if(!errMsg&&su.format==="rr"){const fk=FIN[su.finals]?su.finals:"gf"; if(n<FIN[fk].min) errMsg=FIN[fk].name+" needs "+FIN[fk].min+" or more teams. Pick another finals option.";}
   h+=`<section>${errMsg?`<p class="err">${errMsg}</p>`:""}${ui.err?`<p class="err">${esc(ui.err)}</p>`:""}<button class="btn primary big" data-act="create" ${errMsg?"disabled":""}>Create draw</button></section>`;
   return h;
 }
@@ -1210,23 +1400,23 @@ function parseNames(s){return (s||"").split(/[\n,]+/).map(x=>x.trim()).filter(Bo
 function pcountText(c){if(!c) return "No names yet."; const tms=Math.floor(c/2); return `${c} player${c===1?"":"s"} → ${tms} team${tms===1?"":"s"}${c%2?". Odd number, so one player won't have a partner yet.":""}`;}
 function setupLive(t,E){
   const ro=sync.readOnly, o=t.opts||{};
-  const rules=[cupsOf(t)+" cups"]; if(o.timer) rules.push(o.timerMins+" min timer"); if(o.draws) rules.push("draws allowed"); if(o.usePoints) rules.push("points "+o.winPts+"/"+o.drawPts);
-  let h=`<section class="card"><div class="sec-h"><h2>This tournament</h2></div>
+  const rules=[cupsOf(t)+" cups"]; if(bestOf(t)>1) rules.push("best of "+bestOf(t)); if(o.timer) rules.push(o.timerMins+" min timer"); if(o.draws) rules.push("draws allowed"); if(o.usePoints) rules.push("points "+o.winPts+"/"+o.drawPts);
+  let h=`<section class="card"><div class="sec-h"><h2>This Tournament</h2></div>
     <div class="places">
       <div class="place"><span class="hint">Format</span><span><b>${FMT[t.format]}</b></span><span></span></div>
       ${t.format!=="rr"?`<div class="place"><span class="hint">Draw</span><span><b>${SEED[t.seeding]}</b></span><span></span></div>`:""}
-      <div class="place"><span class="hint">Options</span><span>${t.format==="double"?(t.opts.reset?"Grand final reset on":"Grand final reset off"):t.format==="single"?(t.opts.third?"3rd place playoff":"No 3rd place playoff"):rrSub(t).split(". ")[0]+(t.opts.rrFinal?"":" · no grand final")}</span><span></span></div>
+      <div class="place"><span class="hint">Options</span><span>${t.format==="double"?(t.opts.reset?"Grand Final Reset: On":"Grand Final Reset: Off"):t.format==="single"?(t.opts.third?"3rd Place Playoff":"No 3rd Place Playoff"):rrSub(t).split(". ")[0]+(t.opts.rrFinal?"":" · no finals")}</span><span></span></div>
       <div class="place"><span class="hint">Rules</span><span>${esc(rules.join(" · "))}</span><span></span></div>
     </div></section>`;
   if(!ro){
     if(t.format==="rr") h+=rrLiveHTML(t);
     h+=`<section class="card"><label class="f" for="f-tname">Tournament name<input type="text" id="f-tname" data-k="tname" value="${esc(t.name)}" autocomplete="off"></label></section>`;
-    h+=`<section class="card"><div class="sec-h"><h2>Team names</h2><span class="hint">Fix spelling any time</span></div><div class="teams">${t.teams.map((tm,i)=>`<div class="team" style="grid-template-columns:28px minmax(0,1fr)"><span class="tnum">${t.seeding==="random"||t.format==="rr"?"·":i+1}</span><div class="tfields">
+    h+=`<section class="card"><div class="sec-h"><h2>Team Names</h2><span class="hint">Fix spelling any time</span></div><div class="teams">${t.teams.map((tm,i)=>`<div class="team" style="grid-template-columns:28px minmax(0,1fr)"><span class="tnum">${t.seeding==="random"||t.format==="rr"?"·":i+1}</span><div class="tfields">
       ${tm.p1id||tm.p2id?`<div class="lp" style="grid-column:1/-1">${esc(players(tm))}</div>`:`<input type="text" id="g-${tm.id}-p1" data-k="tteam:${tm.id}:p1" value="${esc(tm.p1)}" placeholder="Player 1" aria-label="Player 1" autocomplete="off">
       <input type="text" id="g-${tm.id}-p2" data-k="tteam:${tm.id}:p2" value="${esc(tm.p2)}" placeholder="Player 2" aria-label="Player 2" autocomplete="off">`}
       <input type="text" class="tname" id="g-${tm.id}-name" data-k="tteam:${tm.id}:name" value="${esc(tm.name)}" placeholder="Team name (optional)" aria-label="Team name" autocomplete="off"></div></div>`).join("")}</div></section>`;
-    h+=`<section class="card"><div class="sec-h"><h2>Start again</h2></div>`;
-    if(ui.confirm) h+=`<div class="confirm"><p>The results are saved to your players' stats, then the draw is cleared. Your teams stay in Setup so you can reuse them.</p><div class="row-btns"><button class="btn danger" data-act="newgo">Save and start again</button><button class="btn" data-act="newno">Keep this tournament</button></div></div>`;
+    h+=`<section class="card"><div class="sec-h"><h2>Start Again</h2></div>`;
+    if(ui.confirm) h+=`<div class="confirm"><p>Save the results to your players' stats, or throw them away. Either way the draw is cleared and your teams stay in Setup so you can reuse them.</p><div class="row-btns"><button class="btn danger" data-act="newgo">Save and start again</button><button class="btn danger" data-act="newdrop">Don't save, start again</button><button class="btn" data-act="newno">Keep this tournament</button></div></div>`;
     else h+=`<p class="hint">Finished, or want a different format? Start a new tournament with the same teams.</p><div><button class="btn danger" data-act="new">Start a new tournament</button></div>`;
     h+=`</section>`;
   } else h+=`<p class="note">View only. The organiser runs the draw from their phone.</p>`;
@@ -1242,21 +1432,22 @@ function makeSlots(f,seeding,teams){
 }
 function createT(){
   const su=S.setup, teams=clone(realTeams()), n=teams.length;
-  if(n<3||n>8){ui.err="Use between 3 and 8 teams.";render();return;}
+  const mn=su.format==="single"?2:3; if(n<mn||n>8){ui.err="Use between "+mn+" and 8 teams.";render();return;}
   ui.err="";
-  const rr=su.format==="rr";
-  const opts={reset:!!su.reset,third:!!su.third,rrFinal:!!su.rrFinal,rrCycles:rr?rrCur():null,cups:Math.max(3,Math.min(15,Math.round(+su.cups)||6)),timer:!!su.timer,timerMins:Math.max(1,Math.min(60,Math.round(+su.timerMins)||10)),timeUp:su.timeUp==="draw"?"draw":"leader",draws:rr&&(!!su.draws||!!su.timer),usePoints:rr&&!!su.usePoints,winPts:Math.max(0,Math.round(+su.winPts)||3),drawPts:Math.max(0,Math.round(+su.drawPts)||0)};
+  const rr=su.format==="rr", bo=([3,5].indexOf(+su.bestOf)>=0)?+su.bestOf:1, fin=rr?(FIN[su.finals]?su.finals:"gf"):"none";
+  const opts={reset:!!su.reset,third:!!su.third,rrFinal:fin!=="none",finals:fin,rrCycles:rr?rrCur():null,bestOf:bo,cups:Math.max(3,Math.min(15,Math.round(+su.cups)||6)),timer:!!su.timer,timerMins:Math.max(1,Math.min(60,Math.round(+su.timerMins)||10)),timeUp:(su.timeUp==="draw"&&bo===1)?"draw":"leader",draws:rr&&bo===1&&(!!su.draws||!!su.timer),usePoints:rr&&!!su.usePoints,winPts:Math.max(0,Math.round(+su.winPts)||3),drawPts:Math.max(0,Math.round(+su.drawPts)||0)};
   const seeding=su.format==="rr"?"random":su.seeding;
-  S.t={name:su.name||"Tournament",format:su.format,seeding,opts,teams,slots:makeSlots(su.format,seeding,teams),matches:buildMatches(su.format,n,opts),results:{},created:Date.now()};
+  S.t={name:su.name||"Tournament",format:su.format,seeding,opts,teams,slots:makeSlots(su.format,seeding,teams),matches:buildMatches(su.format,n,opts),results:{},series:{},created:Date.now()};
   TM={}; tmSave(); persist(true); setTab("draw"); toast("Draw created");
 }
 function prune(t){
   for(let k=0;k<60;k++){const E=engine(t); let ch=false;
     Object.keys(t.results).forEach(id=>{const r=t.results[id], s=E.sides(id), st=E.status(id);
       if(r.a!==s[0]||r.b!==s[1]||st==="skip"||st==="bye"){delete t.results[id];ch=true;}});
+    if(t.series) Object.keys(t.series).forEach(id=>{const sr=t.series[id], s=E.sides(id); if(!sr||!sr.g||!sr.g.length||sr.a!==s[0]||sr.b!==s[1]||E.status(id)!=="ready"){delete t.series[id];ch=true;}});
     if(!ch) break;}
 }
-function setTab(k){ui.tab=k;lsSet(LS+":tab",k);ui.confirm=false;render();window.scrollTo(0,0);}
+function setTab(k){ui.tab=k;ui.hv=null;ui.hdel=false;lsSet(LS+":tab",k);ui.confirm=false;render();window.scrollTo(0,0);}
 document.addEventListener("click",e=>{
   const el=e.target.closest("[data-act]"); if(!el||el.disabled) return;
   const p=el.dataset.act.split(":"), a=p[0], su=S.setup;
@@ -1271,7 +1462,7 @@ document.addEventListener("click",e=>{
       d.w=nw; d.auto=false; applyWin(); renderSheet(); break;}
     case "inc": {const k="s"+p[1], v=num(ui.draft[k])||0; ui.draft[k]=String(Math.max(0,v+(+p[2]))); ui.draft["t"+p[1]]=true; autoPick(); renderSheet(); break;}
     case "save": saveResult(); break;
-    case "clear": delete S.t.results[ui.sheet]; prune(S.t); closeSheet(true); persist(true); render(); toast("Result cleared"); break;
+    case "clear": delete S.t.results[ui.sheet]; if(S.t.series) delete S.t.series[ui.sheet]; delete TM[ui.sheet]; tmSave(); prune(S.t); closeSheet(true); persist(true); render(); toast("Result cleared"); break;
     case "redraw": if(!Object.keys(S.t.results).length){S.t.slots=makeSlots(S.t.format,S.t.seeding,S.t.teams); persist(true); render(); toast("New draw made");} break;
     case "mode": su.mode=p[1]; persist(); render(); break;
     case "clearex": su.teams=blankTeams(4); S.example=false; persist(); render(); break;
@@ -1291,8 +1482,8 @@ document.addEventListener("click",e=>{
     case "create": createT(); break;
     case "new": ui.confirm=true; render(); break;
     case "newno": ui.confirm=false; render(); break;
-    case "newgo": {if(Object.keys(S.t.results).length) S.history.push(clone(S.t));
-      su.teams=clone(S.t.teams); su.name=S.t.name; su.mode=su.teams.some(x=>x.p1id||x.p2id)?"pick":"type"; su.drawn=false; S.example=false; S.t=null; TM={}; tmSave(); ui.confirm=false; closeSheet(true); persist(true); setTab("setup"); toast("Saved. Ready for a new draw"); break;}
+    case "newgo": case "newdrop": {if(a==="newgo"&&Object.keys(S.t.results).length) S.history.push(clone(S.t));
+      su.teams=clone(S.t.teams); su.name=S.t.name; su.mode=su.teams.some(x=>x.p1id||x.p2id)?"pick":"type"; su.drawn=false; S.example=false; S.t=null; TM={}; tmSave(); ui.confirm=false; closeSheet(true); persist(true); setTab("setup"); toast(a==="newgo"?"Saved. Ready for a new draw":"Not saved. Ready for a new draw"); break;}
     case "adj": if(["cups","timerMins","winPts","drawPts"].indexOf(p[1])>=0){su[p[1]]=Math.max(+p[3],Math.min(+p[4],(+su[p[1]]||0)+(+p[2]))); persist(); render();} break;
     case "tup": su.timeUp=p[1]==="draw"?"draw":"leader"; persist(); render(); break;
     case "ps": openPS(p[1]); break;
@@ -1312,7 +1503,7 @@ document.addEventListener("click",e=>{
     case "dagain": drawAgain(); break;
     case "duse": drawUse(); break;
     case "dclose": drawClear(); break;
-    case "snd": lsSet(LS+":mute",muted()?"0":"1"); unlockAudio(); renderDraw(); break;
+    case "snd": lsSet(LS+":mute",muted()?"0":"1"); unlockAudio(); renderDraw(); render(); break;
     case "tmstart": tmStart(ui.sheet); render(); break;
     case "tmpause": tmPause(ui.sheet); render(); break;
     case "tmreset": tmReset(ui.sheet); render(); break;
@@ -1322,6 +1513,14 @@ document.addEventListener("click",e=>{
     case "impick": document.getElementById("imp").click(); break;
     case "impgo": {S=norm(clone(ui.imp)); ui.imp=null; ui.impErr=""; TM={}; tmSave(); persist(true); render(); toast("Backup restored"); break;}
     case "impno": ui.imp=null; render(); break;
+    case "bo": su.bestOf=([3,5].indexOf(+p[1])>=0)?+p[1]:1; persist(); render(); break;
+    case "fin": if(FIN[p[1]]){su.finals=p[1]; persist(); render();} break;
+    case "undog": undoGame(); break;
+    case "hv": ui.hv=+p[1]; ui.hdel=false; render(); window.scrollTo(0,0); break;
+    case "hvback": ui.hv=null; ui.hdel=false; render(); break;
+    case "hdel": ui.hdel=true; render(); break;
+    case "hdelno": ui.hdel=false; render(); break;
+    case "hdelgo": if(S.history[ui.hv]) S.history.splice(ui.hv,1); ui.hv=null; ui.hdel=false; persist(true); render(); toast("Tournament removed"); break;
   }
 });
 document.addEventListener("input",e=>{

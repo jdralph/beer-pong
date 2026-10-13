@@ -1275,16 +1275,18 @@ function rulesHTML(su){
 
 /* ---------- Round robin finals ---------- */
 const FIN={
-  none:{name:"No Finals",min:3,team:0,games:0,title:"",sub:"",short:"",desc:"The ladder decides it. 1st on the ladder wins."},
-  gf:{name:"Grand Final",min:2,team:2,games:1,title:"Grand Final",sub:"Top two on the ladder.",short:"the Grand Final between the top two",desc:"1st plays 2nd. One game decides the title."},
-  page:{name:"Page Playoff",min:4,team:4,games:4,title:"Finals",sub:"Page Playoff. Top four on the ladder.",short:"a Page Playoff for the top four",desc:"1st v 2nd: the winner goes straight to the final. 3rd v 4th: the loser is out. The 1st v 2nd loser plays the 3rd v 4th winner for the other final spot."},
-  top3:{name:"Top 3 Finals",min:3,team:3,games:2,title:"Finals",sub:"Top three on the ladder. 1st waits in the final.",short:"top three finals",desc:"1st goes straight to the final. 2nd plays 3rd and the loser is out. 4th and below are out."},
-  top5:{name:"Top 5 Finals",min:5,team:5,games:5,title:"Finals",sub:"Top five on the ladder. 1st gets a bye.",short:"top five finals",desc:"1st gets a bye. 2nd v 3rd and 4th v 5th (that loser is out). Then 2nd v 3rd winner plays 4th v 5th winner, and the 2nd v 3rd loser plays 1st. The winners play the final."}
+  none:{name:"No Finals",min:3,team:0,games:0,title:"",sub:"",short:"",desc:"The ladder decides it."},
+  gf:{name:"Grand Final",min:2,team:2,games:1,title:"Grand Final",sub:"1v2 on the ladder.",short:"the Grand Final between the top two",desc:"1v2 decides the title."},
+  top3:{name:"Top 3 Finals",min:3,team:3,games:2,title:"Finals",sub:"Top three on the ladder. 1st waits in the Grand Final.",short:"top three finals",desc:"2v3. The winner plays 1st in the Grand Final."},
+  top4:{name:"Top 4 Finals",min:4,team:4,games:3,title:"Finals",sub:"Top four on the ladder. 1v4 and 2v3.",short:"top four finals",desc:"1v4 and 2v3. The winners play the Grand Final, the losers are out."},
+  page:{name:"Page Playoff",min:4,team:4,games:4,title:"Finals",sub:"Page Playoff. Top four on the ladder.",short:"a Page Playoff for the top four",desc:"1v2 and 3v4. The 1v2 winner goes straight to the Grand Final. 3v4 is elimination. The 1v2 loser plays the 3v4 winner for the other spot."},
+  top5:{name:"Top 5 Finals",min:5,team:5,games:5,title:"Finals",sub:"Top five on the ladder. 1st gets a bye.",short:"top five finals",desc:"1st gets a bye. 2v3 and 4v5, where 4v5 is elimination. The 2v3 winner plays the 4v5 winner, and the 2v3 loser plays 1st. The winners play the Grand Final."}
 };
 function finalsMatches(type,n){
   const mk=(id,rd,a,b,o)=>Object.assign({id:id,bk:"F",rd:rd,a:a,b:b,lp:null},o||{});
   if(type==="gf") return [mk("F1",1,"r:1","r:2",{lp:2,nm:"Grand Final"})];
   if(type==="page") return [mk("Q1",1,"r:1","r:2",{nm:"Qualifier 1",sc:true}),mk("EL",1,"r:3","r:4",{nm:"Eliminator",lp:4}),mk("Q2",2,"l:Q1","w:EL",{nm:"Qualifier 2",lp:3}),mk("F1",3,"w:Q1","w:Q2",{nm:"Grand Final",lp:2})];
+  if(type==="top4") return [mk("S1",1,"r:1","r:4",{nm:"Semi-Final",lp:3}),mk("S2",1,"r:2","r:3",{nm:"Semi-Final",lp:3}),mk("F1",2,"w:S1","w:S2",{nm:"Grand Final",lp:2})];
   if(type==="top3") return [mk("S1",1,"r:2","r:3",{nm:"Semi-Final",lp:3}),mk("F1",2,"r:1","w:S1",{nm:"Grand Final",lp:2})];
   if(type==="top5") return [mk("S1",1,"r:2","r:3",{nm:"Round 1 · 2nd v 3rd",sc:true}),mk("S2",1,"r:4","r:5",{nm:"Round 1 · 4th v 5th",lp:5}),mk("S3",2,"w:S1","w:S2",{nm:"Round 2",lp:3}),mk("S4",2,"r:1","l:S1",{nm:"Round 2",lp:3}),mk("F1",3,"w:S3","w:S4",{nm:"Grand Final",lp:2})];
   return [];
@@ -1292,7 +1294,7 @@ function finalsMatches(type,n){
 function finalsHTML(su,n){
   const cur=FIN[su.finals]?su.finals:"gf";
   let h=`<div class="rr" style="flex-direction:column;align-items:stretch"><div><b>Finals</b><p class="hint">What happens after the round robin.</p></div><div class="opts">`;
-  ["none","gf","page","top3","top5"].forEach(k=>{
+  ["none","gf","top3","top4","page","top5"].forEach(k=>{
     const f=FIN[k], ok=k==="none"||n<3||n>=f.min, g=f.games?`${f.games} game${f.games>1?"s":""}`:"";
     h+=`<button class="opt" data-act="fin:${k}" aria-pressed="${cur===k}" ${ok?"":"disabled"}><span class="dot"></span><span class="ot">${f.name}${k==="gf"?'<span class="tag">Default</span>':""}${ok?"":`<span class="tag" style="background:var(--surface);color:var(--muted)">${f.min}+ teams</span>`}</span><span class="od">${f.desc}</span>${g?`<span class="og num">${g}</span>`:""}</button>`;
   });

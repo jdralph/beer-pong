@@ -345,7 +345,7 @@ function norm(o){
 let S=null; try{S=JSON.parse(lsGet(LS));}catch(e){}
 if(!S||!S.setup) S=defaultState();
 S=norm(S);
-const ui={tab:lsGet(LS+":tab")||(S.t?"draw":"setup"),view:"bracket",sheet:null,draft:null,confirm:false,err:"",ps:null,pd:null,pdel:false,perr:"",imp:null,impErr:"",hv:null,hdel:false};
+const ui={tab:lsGet(LS+":tab")||(S.t?"draw":"setup"),view:"bracket",sheet:null,draft:null,confirm:false,err:"",ps:null,pd:null,pdel:false,perr:"",imp:null,impErr:"",hv:null,hdel:false,bk:false};
 const sync={ref:null,status:"local",readOnly:false,writer:false,pending:null,chain:Promise.resolve(),timer:null};
 
 /* ---------- Formats ---------- */
@@ -861,7 +861,7 @@ function openSheet(id){
   document.body.style.overflow="hidden"; renderSheet();
   setTimeout(()=>{const b=document.querySelector(".pickbtn");b&&b.focus();},30);
 }
-function closeSheet(silent){ui.sheet=null;ui.draft=null;ui.ps=null;ui.pd=null;ui.pdel=false;ui.perr="";document.body.style.overflow=DR?"hidden":"";if(!silent) renderSheet();}
+function closeSheet(silent){ui.bk=false;ui.sheet=null;ui.draft=null;ui.ps=null;ui.pd=null;ui.pdel=false;ui.perr="";document.body.style.overflow=DR?"hidden":"";if(!silent) renderSheet();}
 function timerBlock(t,E,id){
   const x=tmGet(id), up=x.mode==="up", low=tmLow(x), blocked=gameState(t,E,id)==="unavail";
   const out=!up&&!!x.fired&&tmLeft(x)<=0;
@@ -875,6 +875,7 @@ function timerBlock(t,E,id){
 function renderSheet(){
   const el=$("#sheet");
   if(ui.ps){renderPSheet(el);return;}
+  if(ui.bk){renderBkSheet(el);return;}
   if(!ui.sheet||!S.t){el.hidden=true;el.innerHTML="";return;}
   const t=S.t, E=engine(t), id=ui.sheet, m=E.M[id], s=E.sides(id), d=ui.draft;
   if(!m||s[0]===undefined||s[1]===undefined||s[0]===BYE||s[1]===BYE){closeSheet();return;}
@@ -1191,10 +1192,10 @@ function viewPlayers(t,E){
       const when=x.created?new Date(x.created).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"}):"";
       return `<button class="resrow" data-act="hv:${q.i}"><span style="min-width:0"><span class="meta">${esc(when)} · ${esc(FMT[x.format]||"")}</span><br><span class="line"><b>${esc(x.name||"Tournament")}</b> · ${champ?"won by "+esc(champ):"unfinished"}</span></span><span class="score" aria-hidden="true">›</span></button>`;}).join("")}</div><p class="hint">Tap a tournament to see its results and ladder.</p></section>`;
   }
-  h+=`<section class="card"><div class="sec-h"><h2>Backup</h2></div><p class="hint">Everything is saved in this browser on this device. Download a backup to keep your players and stats safe, or to move them to another phone.</p>`;
+  h+=`<section class="card"><div class="sec-h"><h2>Backup</h2></div><p class="hint">Players, stats and tournaments are saved in this browser on this device. On an iPhone, tap Save to Files and pick iCloud Drive to keep a safe copy you can restore on any device.</p><p class="hint num">${S.lastBackup?"Last backup: "+esc(new Date(S.lastBackup).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"No backup yet."}</p>`;
   if(ui.impErr) h+=`<p class="err">${esc(ui.impErr)}</p>`;
   if(ui.imp) h+=`<div class="confirm"><p>Replace everything on this device with the backup? It has ${(ui.imp.roster||[]).length} players and ${(ui.imp.history||[]).length} past tournaments.</p><div class="row-btns"><button class="btn danger" data-act="impgo">Restore backup</button><button class="btn" data-act="impno">Cancel</button></div></div>`;
-  else h+=`<div class="row-btns"><button class="btn" data-act="expo">Download backup</button><button class="btn" data-act="impick">Restore from backup</button></div>`;
+  else h+=`<div class="row-btns"><button class="btn primary" data-act="tofiles">Save to Files</button><button class="btn" data-act="expo">Download</button><button class="btn" data-act="impick">Restore from backup</button></div>`;
   h+=`</section>`;
   return h;
 }
@@ -1208,10 +1209,37 @@ function viewHistory(i){
     :`<p class="hint">A removed tournament no longer counts towards player stats.</p><div><button class="btn danger" data-act="hdel">Remove this tournament</button></div>`)+`</section>`;
   return h;
 }
-function exportData(){
-  const blob=new Blob([JSON.stringify({app:"beerpong",v:2,exported:Date.now(),state:S},null,1)],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="beer-pong-backup-"+new Date().toISOString().slice(0,10)+".json";
-  document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},800); toast("Backup downloaded");
+function backupJSON(){return JSON.stringify({app:"beerpong",v:2,exported:Date.now(),state:S},null,1);}
+function backupName(){return "beer-pong-backup-"+new Date().toISOString().slice(0,10)+".json";}
+function downloadBackup(json,name){
+  try{
+    const blob=new Blob([json],{type:"application/json"}), a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{try{URL.revokeObjectURL(a.href);}catch(e){} a.remove();},800);
+  }catch(e){}
+}
+function backupDone(msg){S.lastBackup=Date.now(); closeSheet(true); persist(true); render(); toast(msg);}
+function exportData(){downloadBackup(backupJSON(),backupName()); backupDone("Backup downloaded");}
+/* Opens the phone's share sheet, where "Save to Files" puts the backup in iCloud Drive or any other folder. Falls back to a download. */
+function saveToFiles(){
+  const json=backupJSON(), name=backupName(); let file=null;
+  try{file=new File([json],name,{type:"application/json"});}catch(e){}
+  if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:"Beer Pong backup"}).then(()=>backupDone("Backup saved")).catch(e=>{
+      if(e&&e.name==="AbortError") return;
+      downloadBackup(json,name); backupDone("Backup downloaded");
+    });
+    return;
+  }
+  downloadBackup(json,name); backupDone("Backup downloaded");
+}
+function renderBkSheet(el){
+  el.hidden=false;
+  el.innerHTML=`<button class="scrim" data-act="cancel" aria-label="Close"></button><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sh-t">
+    <p class="eyebrow">Tournament Saved</p>
+    <h2 id="sh-t">Back Up Now?</h2>
+    <p class="hint">Your players and stats are stored in this browser. Save a backup to Files, such as iCloud Drive, so they are safe and easy to move to another device.</p>
+    <div class="actions"><button class="btn primary" data-act="tofiles">Save to Files</button><button class="btn" data-act="cancel">Not now</button></div></div>`;
 }
 
 /* ---------- Setup: roster draw, pick teams, rules ---------- */
@@ -1484,8 +1512,8 @@ document.addEventListener("click",e=>{
     case "create": createT(); break;
     case "new": ui.confirm=true; render(); break;
     case "newno": ui.confirm=false; render(); break;
-    case "newgo": case "newdrop": {if(a==="newgo"&&Object.keys(S.t.results).length) S.history.push(clone(S.t));
-      su.teams=clone(S.t.teams); su.name=S.t.name; su.mode=su.teams.some(x=>x.p1id||x.p2id)?"pick":"type"; su.drawn=false; S.example=false; S.t=null; TM={}; tmSave(); ui.confirm=false; closeSheet(true); persist(true); setTab("setup"); toast(a==="newgo"?"Saved. Ready for a new draw":"Not saved. Ready for a new draw"); break;}
+    case "newgo": case "newdrop": {const saved=a==="newgo"&&Object.keys(S.t.results).length>0; if(saved) S.history.push(clone(S.t));
+      su.teams=clone(S.t.teams); su.name=S.t.name; su.mode=su.teams.some(x=>x.p1id||x.p2id)?"pick":"type"; su.drawn=false; S.example=false; S.t=null; TM={}; tmSave(); ui.confirm=false; closeSheet(true); persist(true); setTab("setup"); if(saved){ui.bk=true; document.body.style.overflow="hidden"; renderSheet();} else toast(a==="newgo"?"Ready for a new draw":"Not saved. Ready for a new draw"); break;}
     case "adj": if(["cups","timerMins","winPts","drawPts"].indexOf(p[1])>=0){su[p[1]]=Math.max(+p[3],Math.min(+p[4],(+su[p[1]]||0)+(+p[2]))); persist(); render();} break;
     case "tup": su.timeUp=p[1]==="draw"?"draw":"leader"; persist(); render(); break;
     case "ps": openPS(p[1]); break;
@@ -1512,6 +1540,7 @@ document.addEventListener("click",e=>{
     case "tmadj": tmAdj(ui.sheet,+p[1]); render(); break;
     case "callit": callIt(); break;
     case "expo": exportData(); break;
+    case "tofiles": saveToFiles(); break;
     case "impick": document.getElementById("imp").click(); break;
     case "impgo": {S=norm(clone(ui.imp)); ui.imp=null; ui.impErr=""; TM={}; tmSave(); persist(true); render(); toast("Backup restored"); break;}
     case "impno": ui.imp=null; render(); break;
@@ -1551,7 +1580,7 @@ document.addEventListener("change",e=>{
   }
   const o=el.dataset&&el.dataset.opt; if(o){S.setup[o]=el.checked; persist(); render(); const n=document.getElementById("o-"+o); n&&n.focus();}
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(DR) drawClear(); else if(ui.sheet||ui.ps) closeSheet();}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){if(DR) drawClear(); else if(ui.sheet||ui.ps||ui.bk) closeSheet();}});
 
 if(!["draw","score","results","players","setup"].includes(ui.tab)) ui.tab="setup";
 setInterval(tick,500);
